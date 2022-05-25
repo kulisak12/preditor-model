@@ -1,0 +1,10 @@
+__pycache__/
+.vscode/
+data/
+logs/
+
+*.h5
+*.npz
+*.tfrecord
+*.zip
+*.pickle
