@@ -17,4 +17,6 @@ classifiers = [
 ]
 dependencies = [
     "flask",
+    "torch", # needs to be installed manually, device needs to be specified
+    "transformers",
 ]
