@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+authors = [
+    { name = "David Klement" },
+]
+name = "prediktor-model"
+version = "0.1"
+description = "Service providing text predictions"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["prediction", "infilling", "nlp", "gpt"]
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+]
+dependencies = [
+    "flask",
+]
