@@ -1,10 +1,6 @@
 __pycache__/
-.vscode/
-data/
-logs/
+.mypy_cache/
+venv/
+*.egg-info/
 
-*.h5
-*.npz
-*.tfrecord
-*.zip
-*.pickle
+.vscode/
