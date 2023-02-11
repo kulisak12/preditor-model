@@ -18,7 +18,11 @@ TERMINATORS = ".!?:;"
 
 
 def predict(text: str) -> str:
-    input_ids = tokenizer.encode(text, return_tensors="pt")
+    # the model doesn't like whitespace at the end
+    trimmed_text = text.rstrip()
+    stripped_suffix = text[len(trimmed_text):]
+
+    input_ids = tokenizer.encode(trimmed_text, return_tensors="pt")
     output_tokens = model.generate(
         input_ids,
         max_new_tokens=MAX_WORDS,
@@ -28,7 +32,9 @@ def predict(text: str) -> str:
     output = tokenizer.decode(output_tokens[0])
 
     # remove input text
-    prediction = output[len(text):]
+    prediction = output[len(trimmed_text):]
+    if stripped_suffix:
+        prediction = prediction.lstrip()
     # only use one sentence
     first_terminator = find_first_occurence(prediction, TERMINATORS)
     if first_terminator != -1:
