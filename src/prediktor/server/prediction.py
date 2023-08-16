@@ -1,8 +1,8 @@
-import re
 import os
+import re
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL_PATH = os.path.join("models", "gpt2")
 

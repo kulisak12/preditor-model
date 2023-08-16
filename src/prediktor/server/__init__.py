@@ -2,7 +2,6 @@ import flask
 
 from prediktor.server.prediction import predict
 
-
 app = flask.Flask(__name__)
 
 
