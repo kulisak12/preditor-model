@@ -1,6 +1,6 @@
 import flask
 
-from prediktor.server.prediction import predict
+from prediktor.server.prediction import infill
 
 app = flask.Flask(__name__)
 
@@ -13,6 +13,7 @@ def get_status():
 @app.route("/", methods=["POST"])
 def submit_text_for_prediction():
     request = flask.request.get_json()
-    text = request["text"]
-    prediction = predict(text)
+    text: str = request["text"]
+    cursor_pos: int = request["cursor"]
+    prediction = infill(text, cursor_pos)
     return flask.jsonify({"prediction": prediction})
