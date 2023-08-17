@@ -3,20 +3,15 @@ import os
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_PATH = os.path.join("models", "gpt2")
+from prediktor.config import Config
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL_PATH, pad_token='<|endoftext|>'
-)
-model = AutoModelForCausalLM.from_pretrained(MODEL_PATH)
+model_path = os.path.join(Config.model_dir, Config.model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(model_path)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.eval()
 model.to(device)
-
-MAX_NEW_LENGTH = 30
-TOP_K = 10
-TEMPERATURE = 0.7
 
 
 def generate(input: str, confidence: float) -> str:
@@ -28,15 +23,17 @@ def generate(input: str, confidence: float) -> str:
     # batch size is always 1
     input_ids = tokenizer.encode(input, return_tensors="pt")[0]
     original_length = input_ids.size(0)
-    max_total_length = input_ids.size(0) + MAX_NEW_LENGTH
+    max_total_length = input_ids.size(0) + Config.max_length
 
     with torch.no_grad():
         while input_ids.size(0) < max_total_length:
             # take the last token
             logits = model(input_ids).logits[-1, :]
             # only sample from the top k tokens
-            top_k = torch.topk(logits, k=TOP_K)
-            probabilities = torch.softmax(top_k.values / TEMPERATURE, dim=-1)
+            top_k = torch.topk(logits, k=Config.top_k)
+            probabilities = torch.softmax(
+                top_k.values / Config.temperature, dim=-1
+            )
             # stop generation if probabilities are low
             confidence -= confidence_loss(probabilities)
             if confidence < 0:

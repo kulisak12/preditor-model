@@ -1,5 +1,6 @@
 import re
 
+from prediktor.config import Config
 from prediktor.model import generate
 
 TERMINATORS = ".!?:;"
@@ -11,7 +12,7 @@ def predict(text: str) -> str:
     # the model doesn't like whitespace at the end
     trimmed_text = text.rstrip()
     stripped_suffix = text[len(trimmed_text):]
-    prediction = generate(trimmed_text, confidence=2.5)
+    prediction = generate(trimmed_text, Config.confidence)
     if stripped_suffix:
         prediction = prediction.lstrip()
 
@@ -25,7 +26,7 @@ def infill(text: str, infill_pos: int) -> str:
         return predict(text)
 
     prompt = format_infill_prompt(text, infill_pos)
-    prediction = generate(prompt, confidence=2.5)
+    prediction = generate(prompt, Config.confidence)
     return prediction
 
 
