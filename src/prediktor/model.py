@@ -1,13 +1,10 @@
-import os
-
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from prediktor.config import Config
 
-model_path = os.path.join(Config.model_dir, Config.model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForCausalLM.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(Config.model_path)
+model = AutoModelForCausalLM.from_pretrained(Config.model_path)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.eval()

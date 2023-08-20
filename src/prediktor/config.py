@@ -4,8 +4,7 @@ from dotenv import load_dotenv
 
 
 class Config:
-    model_dir: str = "models"
-    model_name: str = "gpt2"
+    model_path: str = "gpt2"
     max_length: int = 30
     top_k: int = 10
     temperature: float = 0.7
