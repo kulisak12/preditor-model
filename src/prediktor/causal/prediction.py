@@ -1,7 +1,7 @@
 import re
 
+from prediktor.causal.model import generate
 from prediktor.config import Config
-from prediktor.model import generate
 
 TERMINATORS = ".!?:;"
 MASK = "..."

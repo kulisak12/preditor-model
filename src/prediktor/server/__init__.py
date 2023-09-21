@@ -1,6 +1,6 @@
 import flask
 
-from prediktor.server.prediction import infill
+from prediktor.causal.prediction import infill
 
 app = flask.Flask(__name__)
 
