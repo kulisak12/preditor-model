@@ -1,9 +1,12 @@
+from typing import Any, Iterable, List
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from prediktor.config import Config
 
 tokenizer = AutoTokenizer.from_pretrained(Config.model_path)
+tokenizer_with_prefix = AutoTokenizer.from_pretrained(Config.model_path, use_prefix_space=True)
 model = AutoModelForCausalLM.from_pretrained(Config.model_path)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -53,3 +56,36 @@ def confidence_loss(probabilities: torch.Tensor) -> float:
     """Estimate how much the confidence of the generated text decreases."""
     prob_sum = probabilities[:3].sum().item()
     return 1 - prob_sum**2
+
+
+def beam_search(
+    input_text: str,
+    bad_words: Iterable[str],
+    end: str = "",
+) -> List[str]:
+    input_ids = tokenizer.encode(input_text, return_tensors="pt").to(device)
+    num_end_tokens = len(tokenizer.encode(end, add_special_tokens=False))
+    gen_ids = model.generate(
+        input_ids,
+        bad_words_ids=get_bad_tokens(bad_words),
+        max_new_tokens=num_end_tokens + Config.max_length,
+        num_return_sequences=8,
+        num_beams=8,
+        num_beam_groups=4,
+        diversity_penalty=20.0,
+        pad_token_id=tokenizer.eos_token_id
+    )
+    decoded_texts = tokenizer.batch_decode(gen_ids, skip_special_tokens=True)
+    return decoded_texts
+
+
+def get_bad_tokens(bad_words: Iterable[str]) -> List[Any]:
+    "Converts a sequence of words into a list of tokens"
+    tokens_list = []
+    for word in bad_words:
+        # some tokenizers accept the prefix space, some need the parameter
+        tokenized_word = tokenizer_with_prefix([" " + word], add_special_tokens=False).input_ids[0]
+        tokens_list.append(tokenized_word)
+        tokenized_word = tokenizer([word], add_special_tokens=False).input_ids[0]
+        tokens_list.append(tokenized_word)
+    return tokens_list
