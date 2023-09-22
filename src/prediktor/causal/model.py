@@ -69,9 +69,9 @@ def beam_search(
         input_ids,
         bad_words_ids=get_bad_tokens(bad_words),
         max_new_tokens=num_end_tokens + Config.max_length,
-        num_return_sequences=8,
-        num_beams=8,
-        num_beam_groups=4,
+        num_return_sequences=Config.num_beams,
+        num_beams=Config.num_beams,
+        num_beam_groups=(Config.num_beams + 1) // 2,
         diversity_penalty=20.0,
         pad_token_id=tokenizer.eos_token_id
     )

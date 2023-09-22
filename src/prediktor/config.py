@@ -9,6 +9,7 @@ class Config:
     top_k: int = 10
     temperature: float = 0.7
     confidence: float = 2.5
+    num_beams: int = 6
 
 
 load_dotenv()
