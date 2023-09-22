@@ -2,4 +2,42 @@
 
 A model used by [Prediktor](https://github.com/kulisak12/prediktor).
 
-Created from existing languages models, fine-tuned for text infilling.
+Provides completions while typing, even in the middle of a sentence.
+Uses existing large language models without any additional fine-tuning.
+
+## Quick start
+
+```bash
+pip install -e .
+flask --app prediktor.server run -p 3000
+```
+
+### Configuration
+
+The model can be configured using environment variables.
+The recommended way is to use a `.env` file in the root directory of the project.
+
+- `PREDIKTOR_MODEL_PATH`: Path to the model, either local or on HuggingFace.
+- `PREDIKTOR_MAX_LENGTH`: The number of new tokens to generate.
+
+Other options can be found in the [configuration provider](src/prediktor/config.py).
+
+## Requests
+
+The server listens for POST requests with the following JSON body.
+Cursor is the position of the cursor in the text.
+
+```json
+{
+    "text": "The text to complete.",
+    "cursor": 21
+}
+```
+
+The response has the following format.
+
+```json
+{
+    "prediction": "The predicted text."
+}
+```
