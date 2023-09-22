@@ -60,7 +60,10 @@ def infill(text: str, cursor_pos: int) -> str:
     prompt = format_infill_prompt(before_cursor, after_cursor)
     decoded = beam_search(prompt, bad_words, after_cursor)
     outputs = [extract_output(text, before_cursor) for text in decoded]
-    return get_best_output(outputs, after_cursor).rstrip()
+    best_output = get_best_output(outputs, after_cursor).rstrip()
+    if len(before_cursor) < cursor_pos:
+        best_output = best_output.lstrip()
+    return best_output
 
 
 def format_infill_prompt(before: str, after: str) -> str:
