@@ -73,9 +73,7 @@ def beam_search(
         num_beams=Config.num_beams,
         num_beam_groups=(Config.num_beams + 1) // 2,
         diversity_penalty=20.0,
-        pad_token_id=tokenizer.eos_token_id,
-        top_k=Config.top_k,
-        temperature=Config.temperature,
+        pad_token_id=tokenizer.eos_token_id
     )
     decoded_texts = tokenizer.batch_decode(gen_ids, skip_special_tokens=True)
     return decoded_texts
