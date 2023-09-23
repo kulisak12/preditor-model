@@ -21,7 +21,7 @@ def generate(input: str, confidence: float) -> str:
     The higher the confidence, the longer the generated text.
     """
     # batch size is always 1
-    input_ids = tokenizer.encode(input, return_tensors="pt")[0]
+    input_ids = tokenizer.encode(input, return_tensors="pt")[0].to(device)
     original_length = input_ids.size(0)
     max_total_length = input_ids.size(0) + Config.max_length
 
