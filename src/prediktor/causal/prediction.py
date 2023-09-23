@@ -16,7 +16,7 @@ PROMPT = """\
 {}"""
 INFILL_INSTRUCTION = "Fill in the blank marked by [...]"
 
-bad_words = ["[...]", "[", "..."]
+bad_words = ["[...]", "[", "...", "[…]", "…"]
 bad_words.extend("#" * i for i in range(1, 5))
 bad_words.extend(" " * i for i in range(2, 10))
 bad_words.extend("_" * i for i in range(2, 10))
