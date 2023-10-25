@@ -2,8 +2,8 @@ import re
 
 import torch
 
-from prediktor.causal.model import device, model, tokenizer
 from prediktor.config import Config
+from prediktor.model import device, model, tokenizer
 
 TERMINATORS = ".!?:;"
 

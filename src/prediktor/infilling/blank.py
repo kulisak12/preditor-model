@@ -1,9 +1,8 @@
 from typing import Any, Iterable, List
+
 from prediktor.config import Config
-
-
-from prediktor.causal.model import device, model, tokenizer, tokenizer_with_prefix
-from prediktor.causal.prediction import predict
+from prediktor.model import device, model, tokenizer, tokenizer_with_prefix
+from prediktor.prediction.confidence import predict
 
 PROMPT = """\
 ### Instruction:

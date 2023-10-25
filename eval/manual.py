@@ -1,7 +1,7 @@
 import torch
 
-from prediktor.causal.model import model, tokenizer
 from prediktor.config import Config
+from prediktor.model import model, tokenizer
 
 
 def choose_continuation_manually(input_text: str) -> None:
