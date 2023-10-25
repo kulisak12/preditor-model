@@ -1,6 +1,6 @@
 import flask
 
-from prediktor.infilling import infill
+from prediktor import infilling
 
 app = flask.Flask(__name__)
 
@@ -15,5 +15,5 @@ def submit_text_for_prediction():
     request = flask.request.get_json()
     text: str = request["text"]
     cursor_pos: int = request["cursor"]
-    prediction = infill(text, cursor_pos)
+    prediction = infilling.infill(text, cursor_pos)
     return flask.jsonify({"prediction": prediction})

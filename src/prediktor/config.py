@@ -1,6 +1,6 @@
 import os
 
-from dotenv import load_dotenv
+import dotenv
 
 
 class Config:
@@ -12,7 +12,7 @@ class Config:
     num_beams: int = 6
 
 
-load_dotenv()
+dotenv.load_dotenv()
 # load config from environment variables PREDIKTOR_MODEL_DIR, etc.
 for field in Config.__dict__:
     if not field.startswith("__"):

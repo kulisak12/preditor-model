@@ -1,7 +1,7 @@
 from typing import Any, Iterable, List
 
+from prediktor import model
 from prediktor.config import Config
-from prediktor.model import device, model, tokenizer, tokenizer_with_prefix
 
 PROMPT = """\
 ### Instruction:
@@ -73,9 +73,9 @@ def beam_search(
     bad_words: Iterable[str],
     end: str = "",
 ) -> List[str]:
-    input_ids = tokenizer.encode(input_text, return_tensors="pt").to(device)
-    num_end_tokens = len(tokenizer.encode(end, add_special_tokens=False))
-    gen_ids = model.generate(
+    input_ids = model.tokenizer.encode(input_text, return_tensors="pt").to(model.device)
+    num_end_tokens = len(model.tokenizer.encode(end, add_special_tokens=False))
+    gen_ids = model.model.generate(
         input_ids,
         bad_words_ids=get_bad_tokens(bad_words),
         max_new_tokens=num_end_tokens + Config.max_length,
@@ -83,9 +83,9 @@ def beam_search(
         num_beams=Config.num_beams,
         num_beam_groups=(Config.num_beams + 1) // 2,
         diversity_penalty=20.0,
-        pad_token_id=tokenizer.eos_token_id
+        pad_token_id=model.tokenizer.eos_token_id
     )
-    decoded_texts = tokenizer.batch_decode(gen_ids, skip_special_tokens=True)
+    decoded_texts = model.tokenizer.batch_decode(gen_ids, skip_special_tokens=True)
     return decoded_texts
 
 
@@ -93,9 +93,9 @@ def get_bad_tokens(bad_words: Iterable[str]) -> List[Any]:
     "Converts a sequence of words into a list of tokens"
     tokens_list = []
     for word in bad_words:
-        # some tokenizers accept the prefix space, some need the parameter
-        tokenized_word = tokenizer_with_prefix([" " + word], add_special_tokens=False).input_ids[0]
+        # some model.tokenizers accept the prefix space, some need the parameter
+        tokenized_word = model.tokenizer_with_prefix([" " + word], add_special_tokens=False).input_ids[0]
         tokens_list.append(tokenized_word)
-        tokenized_word = tokenizer([word], add_special_tokens=False).input_ids[0]
+        tokenized_word = model.tokenizer([word], add_special_tokens=False).input_ids[0]
         tokens_list.append(tokenized_word)
     return tokens_list

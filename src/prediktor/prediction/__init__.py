@@ -1,6 +1,6 @@
 import re
 
-from prediktor.prediction.confidence import generate
+from prediktor.prediction import confidence
 
 TERMINATORS = ".!?:;"
 
@@ -10,7 +10,7 @@ def predict(text: str) -> str:
     # the model doesn't like whitespace at the after
     trimmed_text = text.rstrip()
     stripped_suffix = text[len(trimmed_text):]
-    prediction = generate(trimmed_text)
+    prediction = confidence.generate(trimmed_text)
     if stripped_suffix:
         prediction = prediction.lstrip()
 

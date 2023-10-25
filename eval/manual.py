@@ -1,19 +1,19 @@
 import torch
 
+from prediktor import model
 from prediktor.config import Config
-from prediktor.model import model, tokenizer
 
 
 def choose_continuation_manually(input_text: str) -> None:
     """Generate continuation, prompting the user to choose the next token."""
-    # based on prediktor.model.generate
-    input_ids = tokenizer.encode(input_text, return_tensors="pt")[0]
+    # based on prediktor.model.model.generate
+    input_ids = model.tokenizer.encode(input_text, return_tensors="pt")[0]
 
     with torch.no_grad():
         while True:
-            print(tokenizer.decode(input_ids))
+            print(model.tokenizer.decode(input_ids))
             # take the last token
-            logits = model(input_ids).logits[-1, :]
+            logits = model.model(input_ids).logits[-1, :]
             # only sample from the top k tokens
             top_k = torch.topk(logits, k=8)
             probabilities = torch.softmax(
@@ -33,5 +33,5 @@ def choose_continuation_manually(input_text: str) -> None:
 
 
 def print_option(i, token_id, prob):
-    token = tokenizer.decode(token_id.item())
+    token = model.tokenizer.decode(token_id.item())
     print(f"{[i]}: {token} ({prob.item():.3f})  ", end="")
