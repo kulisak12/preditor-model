@@ -1,25 +1,11 @@
 import re
-from typing import List
 
-from prediktor.causal.model import beam_search, generate
+import torch
+
+from prediktor.causal.model import device, model, tokenizer
 from prediktor.config import Config
 
 TERMINATORS = ".!?:;"
-PROMPT = """\
-### Instruction:
-{}
-
-### Input:
-{}
-
-### Output:
-{}"""
-INFILL_INSTRUCTION = "Fill in the blank marked by [...]"
-
-bad_words = ["[...]", "[", "...", "[…]", "…"]
-bad_words.extend("#" * i for i in range(1, 5))
-bad_words.extend(" " * i for i in range(2, 10))
-bad_words.extend("_" * i for i in range(2, 10))
 
 
 def predict(text: str) -> str:
@@ -50,56 +36,45 @@ def find_first_occurence(text: str, chars: str) -> int:
     return match.start() if match else -1
 
 
-def infill(text: str, cursor_pos: int) -> str:
-    """Generate an infill at the given position."""
-    if cursor_pos >= len(text.rstrip()):
-        return predict(text)
+def generate(input: str, confidence: float) -> str:
+    """Use the model to generate a continuation of the input text.
 
-    before_cursor = text[:cursor_pos].rstrip()
-    after_cursor = text[cursor_pos:].lstrip()
-    prompt = format_infill_prompt(before_cursor, after_cursor)
-    decoded = beam_search(prompt, bad_words, after_cursor)
-    outputs = [extract_output(text, before_cursor) for text in decoded]
-    best_output = get_best_output(outputs, after_cursor).rstrip()
-    if len(before_cursor) < cursor_pos:
-        best_output = best_output.lstrip()
-    return best_output
-
-
-def format_infill_prompt(before: str, after: str) -> str:
-    """Create the prompt for the infill generation."""
-    return PROMPT.format(
-        INFILL_INSTRUCTION,
-        before + " [...] " + after,
-        before
-    )
-
-
-def extract_output(text: str, before_cursor: str) -> str:
-    start = "### Output:\n" + before_cursor
-    filled = text[text.find(start) + len(start):]
-    return filled[:filled.find("\n")]
-
-
-def get_best_output(outputs: List[str], after: str) -> str:
-    """Return the output that best matches the text after cursor.
-
-    Favor outputs in the beginning of the list.
+    Uses top-k sampling.
+    The higher the confidence, the longer the generated text.
     """
-    # exact match
-    for output in outputs:
-        if output.endswith(after):
-            return output[:len(output) - len(after)]
-    # partial match
-    end_first_word = after.split()[0]
-    for output in outputs:
-        pos = output.find(end_first_word)
-        if pos != -1:
-            return output[:pos]
-    # no match
-    for output in outputs:
-        splits = output.split()
-        if len(splits) > 1:
-            return splits[0]
-    # no output
-    return ""
+    # batch size is always 1
+    input_ids = tokenizer.encode(input, return_tensors="pt")[0].to(device)
+    original_length = input_ids.size(0)
+    max_total_length = input_ids.size(0) + Config.max_length
+
+    with torch.no_grad():
+        while input_ids.size(0) < max_total_length:
+            # take the last token
+            logits = model(input_ids).logits[-1, :]
+            # only sample from the top k tokens
+            top_k = torch.topk(logits, k=Config.top_k)
+            probabilities = torch.softmax(
+                top_k.values / Config.temperature, dim=-1
+            )
+            # stop generation if probabilities are low
+            confidence -= confidence_loss(probabilities)
+            if confidence < 0:
+                break
+
+            next_token_index = torch.multinomial(probabilities, num_samples=1)
+            next_token = top_k.indices[next_token_index]
+            if next_token.item() == tokenizer.eos_token_id:
+                break
+            input_ids = torch.cat((input_ids, next_token), dim=-1)
+
+    generated_ids = input_ids[original_length:]
+    generated_text = tokenizer.decode(
+        generated_ids.squeeze().tolist(), skip_special_tokens=True
+    )
+    return generated_text
+
+
+def confidence_loss(probabilities: torch.Tensor) -> float:
+    """Estimate how much the confidence of the generated text decreases."""
+    prob_sum = probabilities[:3].sum().item()
+    return 1 - prob_sum**2
