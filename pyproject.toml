@@ -18,7 +18,7 @@ classifiers = [
 dependencies = [
     "flask",
     "python-dotenv",
-    "torch", # needs to be installed manually, device needs to be specified
+    "torch",
     "transformers",
 ]
 

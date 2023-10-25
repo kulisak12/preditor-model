@@ -12,6 +12,9 @@ pip install -e .
 flask --app prediktor.server run -p 3000
 ```
 
+If your device does not have a GPU, you need to
+[install the CPU version of PyTorch](https://pytorch.org/get-started/locally/).
+
 ### Configuration
 
 The model can be configured using environment variables.
