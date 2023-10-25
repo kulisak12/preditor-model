@@ -2,7 +2,6 @@ from typing import Any, Iterable, List
 
 from prediktor.config import Config
 from prediktor.model import device, model, tokenizer, tokenizer_with_prefix
-from prediktor.prediction.confidence import predict
 
 PROMPT = """\
 ### Instruction:
@@ -21,19 +20,12 @@ bad_words.extend(" " * i for i in range(2, 10))
 bad_words.extend("_" * i for i in range(2, 10))
 
 
-def infill(text: str, cursor_pos: int) -> str:
-    """Generate an infill at the given position."""
-    if cursor_pos >= len(text.rstrip()):
-        return predict(text)
-
-    before_cursor = text[:cursor_pos].rstrip()
-    after_cursor = text[cursor_pos:].lstrip()
+def infill_between(before_cursor: str, after_cursor: str) -> str:
+    """Generate an infill between the given strings."""
     prompt = format_infill_prompt(before_cursor, after_cursor)
     decoded = beam_search(prompt, bad_words, after_cursor)
     outputs = [extract_output(text, before_cursor) for text in decoded]
     best_output = get_best_output(outputs, after_cursor).rstrip()
-    if len(before_cursor) < cursor_pos:
-        best_output = best_output.lstrip()
     return best_output
 
 

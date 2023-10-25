@@ -1,6 +1,6 @@
 import flask
 
-from prediktor.infilling.blank import infill
+from prediktor.infilling import infill
 
 app = flask.Flask(__name__)
 
