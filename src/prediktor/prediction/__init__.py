@@ -1,21 +1,29 @@
 import re
+from typing import Callable
 
 from prediktor.prediction import confidence
 
 TERMINATORS = ".!?:;"
 
 
-def predict(text: str) -> str:
-    """Generate continuation for the given text."""
-    # the model doesn't like whitespace at the after
-    trimmed_text = text.rstrip()
-    stripped_suffix = text[len(trimmed_text):]
-    prediction = confidence.generate(trimmed_text)
-    if stripped_suffix:
-        prediction = prediction.lstrip()
+class Predictor:
+    def __init__(self, func: Callable[[str], str]) -> None:
+        self.func = func
 
-    # only use one sentence
-    return first_sentence(prediction)
+    def predict(self, text: str) -> str:
+        """Generate continuation for the given text."""
+        # the model doesn't like whitespace at the after
+        trimmed_text = text.rstrip()
+        stripped_suffix = text[len(trimmed_text):]
+        prediction = self.func(trimmed_text)
+        if stripped_suffix:
+            prediction = prediction.lstrip()
+
+        # only use one sentence
+        return first_sentence(prediction)
+
+
+confidence_predictor = Predictor(confidence.generate)
 
 
 def first_sentence(text: str) -> str:
