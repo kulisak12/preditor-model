@@ -1,5 +1,4 @@
 from prediktor import model
-from prediktor.config import Config
 
 
 def generate(input_text: str) -> str:
