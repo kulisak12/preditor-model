@@ -4,14 +4,14 @@ from prediktor import model
 from prediktor.config import Config
 
 
-def generate(input: str) -> str:
+def generate(input_text: str) -> str:
     """Use the model.model to generate a continuation of the input text.
 
     Uses top-k sampling.
     The higher the confidence, the longer the generated text.
     """
     # batch size is always 1
-    input_ids = model.tokenizer.encode(input, return_tensors="pt")[0].to(model.device)
+    input_ids = model.tokenizer.encode(input_text, return_tensors="pt")[0].to(model.device)
     original_length = input_ids.size(0)
     max_total_length = input_ids.size(0) + Config.max_length
 
@@ -36,11 +36,11 @@ def generate(input: str) -> str:
                 break
             input_ids = torch.cat((input_ids, next_token), dim=-1)
 
-    generated_ids = input_ids[original_length:]
-    generated_text = model.tokenizer.decode(
-        generated_ids.squeeze().tolist(), skip_special_tokens=True
+    output_ids = input_ids[original_length:]
+    decoded_text = model.tokenizer.decode(
+        output_ids.squeeze().tolist(), skip_special_tokens=True
     )
-    return generated_text
+    return decoded_text
 
 
 def confidence_loss(probabilities: torch.Tensor) -> float:
