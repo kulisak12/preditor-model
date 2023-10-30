@@ -1,6 +1,6 @@
 from typing import Callable
 
-from prediktor.infilling import blank
+from prediktor.infilling import blank, end
 
 
 class Infiller:
@@ -18,3 +18,4 @@ class Infiller:
 
 
 blank_infiller = Infiller(blank.infill_between)
+end_infiller = Infiller(end.infill_between)
