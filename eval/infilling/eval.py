@@ -25,17 +25,18 @@ def main() -> None:
     is_debug = "--debug" in sys.argv
     with open("sentences.txt") as file:
         examples = read_examples(file)
-    for infiller in INFILLERS:
-        evaluate(infiller, examples, is_debug)
+    for name, infiller in INFILLERS.items():
+        correct = evaluate(infiller, examples, is_debug)
+        total = len(examples)
+        print(f"{name}: {correct}/{total}")
 
 
 def evaluate(
     infiller: infilling.InfillFunc,
     examples: List[Example],
     is_debug: bool = False
-) -> None:
+) -> int:
     correct = 0
-    total = len(examples)
     for example in examples:
         actual = infilling._infill(
             model, infiller,
@@ -46,7 +47,7 @@ def evaluate(
             correct += 1
         if is_debug:
             print(f"{example.before_cursor}<{actual}>{example.after_cursor}")
-    print(f"{infiller.__class__.__name__}: {correct}/{total}")
+    return correct
 
 
 def read_examples(file: TextIO) -> List[Example]:
