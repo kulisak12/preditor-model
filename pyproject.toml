@@ -21,6 +21,7 @@ dependencies = [
     "python-dotenv",
     "torch",
     "transformers",
+    "ufal.morphodita",
 ]
 
 [tool.mypy]
