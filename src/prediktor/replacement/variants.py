@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Tuple
 
 from prediktor import tags
 
@@ -36,19 +36,25 @@ class ReplacementVariantsGenerator:
             "The replacement is not a single token in the text."
         )
 
-    def get_variants(self, prefix: str, num_prefix_tokens: int) -> Set[str]:
+    def get_variants(
+        self, prefix: str, num_prefix_tokens: int
+    ) -> Tuple[Set[str], int]:
         """Extend given prefix with variants of following tokens."""
-        while num_prefix_tokens < len(self.tagged_tokens):
+        variants = {prefix}
+        while (
+            num_prefix_tokens < len(self.tagged_tokens)
+            and len(variants) == 1
+        ):
             token = self.tagged_tokens[num_prefix_tokens]
             continuations = (
                 {token.form} if token.lemma is None or token.tag is None
                 else tags.generate_word_variations(token.lemma, token.tag)
             )
-            if len(continuations) == 1:
-                prefix += next(iter(continuations))
-                num_prefix_tokens += 1
-                continue
-            return {
-                prefix + continuation for continuation in continuations
+
+            num_prefix_tokens += 1
+            current_prefix = next(iter(variants))
+            variants = {
+                current_prefix + continuation
+                for continuation in continuations
             }
-        return {prefix}
+        return (variants, num_prefix_tokens)
