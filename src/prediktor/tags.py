@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List, Set
+from typing import List, Optional, Set
 
 from ufal import morphodita
 
@@ -10,12 +10,12 @@ if not tagger:
     raise Exception(f"Cannot load tagger from file '{Config.dict_path}'.")
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class TaggedToken:
-    lemma: str
-    tag: str
-    start: int
-    length: int
+    lemma: Optional[str]
+    tag: Optional[str]
+    form: str
+
 
 GUESSER = morphodita.Morpho.GUESSER
 
@@ -31,16 +31,22 @@ def tag(text: str) -> List[TaggedToken]:
 
     result: List[TaggedToken] = []
     tokenizer.setText(text)
+    text_pos = 0
     while tokenizer.nextSentence(forms, tokens):
         tagger.tag(forms, lemmas, GUESSER)
         for lemma, token in zip(lemmas, tokens):
-            tagged = TaggedToken(
+            if token.start != text_pos:
+                result.append(TaggedToken(
+                    lemma=None,
+                    tag=None,
+                    form=text[text_pos:token.start]
+                ))
+            result.append(TaggedToken(
                 lemma=lemma.lemma,
                 tag=lemma.tag,
-                start=token.start,
-                length=token.length,
-            )
-            result.append(tagged)
+                form=text[token.start:token.start+token.length]
+            ))
+            text_pos = token.start + token.length
     return result
 
 
@@ -85,7 +91,7 @@ def create_tag_wildcard(tag: str) -> str:
         tag_chars[i] = "?"
     if tag_chars[14] != "-":
         tag_chars[14] = "?"
-    variants = "".join({ "-", "1", tag_chars[15] })
+    variants = "".join({"-", "1", tag_chars[15]})
     tag_chars[15] = "[" + variants + "]"
     wildcard = "".join(tag_chars)
     return wildcard[1:]  # shift back
