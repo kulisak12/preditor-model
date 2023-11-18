@@ -37,24 +37,29 @@ class ReplacementVariantsGenerator:
         )
 
     def get_variants(
-        self, prefix: str, num_prefix_tokens: int
+        self, num_prefix_tokens: int
     ) -> Tuple[Set[str], int]:
-        """Extend given prefix with variants of following tokens."""
-        variants = {prefix}
+        """Construct possible extensions of a prefix of the text.
+
+        Returns a set of possible extensions and the number of tokens in
+        the extensions (same for all of them).
+        """
+        variants = {""}
+        next_token = num_prefix_tokens
         while (
-            num_prefix_tokens < len(self.tagged_tokens)
+            next_token < len(self.tagged_tokens)
             and len(variants) == 1
         ):
-            token = self.tagged_tokens[num_prefix_tokens]
+            token = self.tagged_tokens[next_token]
             continuations = (
                 {token.form} if token.lemma is None or token.tag is None
                 else tags.generate_word_variations(token.lemma, token.tag)
             )
 
-            num_prefix_tokens += 1
+            next_token += 1
             current_prefix = next(iter(variants))
             variants = {
                 current_prefix + continuation
                 for continuation in continuations
             }
-        return (variants, num_prefix_tokens)
+        return (variants, next_token - num_prefix_tokens)
