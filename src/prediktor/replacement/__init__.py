@@ -1,5 +1,6 @@
 from typing import Callable
 
+from prediktor.replacement import dijkstra
 from prediktor.replacement.variants import ReplacementVariantsGenerator
 
 
@@ -17,3 +18,6 @@ class Replacer:
         """Replace part of the text and modify the rest to match."""
         rvg = ReplacementVariantsGenerator(text, start, length, replacement)
         return self.func(rvg)
+
+
+dijkstra_replacer = Replacer(dijkstra.replace_dijkstra)
