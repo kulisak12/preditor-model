@@ -11,7 +11,7 @@ if not tagger:
 
 
 @dataclasses.dataclass(frozen=True)
-class TaggedToken:
+class TaggedForm:
     lemma: Optional[str]
     tag: Optional[str]
     form: str
@@ -20,7 +20,7 @@ class TaggedToken:
 GUESSER = morphodita.Morpho.GUESSER
 
 
-def tag(text: str) -> List[TaggedToken]:
+def tag(text: str) -> List[TaggedForm]:
     """Tag the given text using the loaded tagger."""
     forms = morphodita.Forms()
     lemmas = morphodita.TaggedLemmas()
@@ -29,19 +29,19 @@ def tag(text: str) -> List[TaggedToken]:
     if tokenizer is None:
         raise Exception("No tokenizer is defined for the supplied model!")
 
-    result: List[TaggedToken] = []
+    result: List[TaggedForm] = []
     tokenizer.setText(text)
     text_pos = 0
     while tokenizer.nextSentence(forms, tokens):
         tagger.tag(forms, lemmas, GUESSER)
         for lemma, token in zip(lemmas, tokens):
             if token.start != text_pos:
-                result.append(TaggedToken(
+                result.append(TaggedForm(
                     lemma=None,
                     tag=None,
                     form=text[text_pos:token.start]
                 ))
-            result.append(TaggedToken(
+            result.append(TaggedForm(
                 lemma=lemma.lemma,
                 tag=lemma.tag,
                 form=text[token.start:token.start+token.length]
@@ -50,22 +50,25 @@ def tag(text: str) -> List[TaggedToken]:
     return result
 
 
-def generate_word_variations(lemma: str, tag: str) -> Set[str]:
+def generate_word_variations(form: TaggedForm) -> Set[str]:
     """Generate lemma forms to consider when changing a sentence.
 
     Only meaningful variations are considered.
-    The original lemma will always be included in the result.
+    The original form will always be included in the result.
     """
+    original = {form.form}
+    if form.lemma is None or form.tag is None:
+        return original
     morpho = tagger.getMorpho()
-    wildcard = create_tag_wildcard(tag)
+    wildcard = create_tag_wildcard(form.tag)
     lemmas_forms = morphodita.TaggedLemmasForms()
-    morpho.generate(lemma, wildcard, GUESSER, lemmas_forms)
-    assert len(lemmas_forms) == 1
-    return {
+    morpho.generate(form.lemma, wildcard, GUESSER, lemmas_forms)
+    variantions = {
         form.form
         for lemma_forms in lemmas_forms
         for form in lemma_forms.forms
     }
+    return variantions | original
 
 
 def create_tag_wildcard(tag: str) -> str:
@@ -91,7 +94,6 @@ def create_tag_wildcard(tag: str) -> str:
         tag_chars[i] = "?"
     if tag_chars[14] != "-":
         tag_chars[14] = "?"
-    variants = "".join({"-", "1", tag_chars[15]})
-    tag_chars[15] = "[" + variants + "]"
+    tag_chars[15] = "[-1]"
     wildcard = "".join(tag_chars)
     return wildcard[1:]  # shift back
