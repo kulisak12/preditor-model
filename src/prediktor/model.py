@@ -15,3 +15,9 @@ generation_config = GenerationConfig(
     pad_token_id=tokenizer.eos_token_id,
 )
 device = model.device
+
+
+def encode_with_eos(text: str) -> torch.Tensor:
+    input_ids = tokenizer.encode(text, return_tensors="pt")
+    eos_tensor = torch.tensor(tokenizer.eos_token_id).reshape(1, 1)
+    return torch.cat([eos_tensor, input_ids], dim=-1)
