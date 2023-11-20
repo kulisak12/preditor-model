@@ -10,9 +10,11 @@ def infer_continuation_nlp(
     input_ids: torch.Tensor, continuation_start: int
 ) -> float:
     """Infer the negative log probability of continuation."""
+    assert continuation_start > 0, "continuation must start after BOS token"
     with torch.no_grad():
         logits = model.model(input_ids).logits[0]
-    continuation_logits = logits[continuation_start:]
+    # prediction is in the previous position
+    continuation_logits = logits[continuation_start-1:-1]
     softmax = torch.softmax(continuation_logits, dim=-1)
     continuation_ids = input_ids[0, continuation_start:]
     probs = softmax[torch.arange(len(continuation_ids)), continuation_ids]
