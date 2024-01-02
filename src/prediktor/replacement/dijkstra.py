@@ -30,8 +30,8 @@ def replace_dijkstra(rvg: ReplacementVariantsGenerator) -> str:
             return current.text
         new_num_forms = current.num_forms + num_variant_forms
 
-        for variant in variants:
-            new_text = current.text + variant
-            new_nlp = nlp.infer_nlp(new_text)
+        new_texts = [current.text + variant for variant in variants]
+        new_nlps = nlp.infer_nlp_batch(new_texts)
+        for new_text, new_nlp in zip(new_texts, new_nlps):
             node = SearchNode(new_text, new_nlp, new_num_forms)
             open_nodes.append(node)
