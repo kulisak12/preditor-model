@@ -1,24 +1,7 @@
 import dataclasses
 
-import torch
-
-from prediktor import model
+from prediktor.replacement import nlp
 from prediktor.replacement.variants import ReplacementVariantsGenerator
-
-
-def infer_continuation_nlp(
-    input_ids: torch.Tensor, continuation_start: int
-) -> float:
-    """Infer the negative log probability of continuation."""
-    assert continuation_start > 0, "continuation must start after BOS token"
-    with torch.no_grad():
-        logits = model.model(input_ids).logits[0]
-    # prediction is in the previous position
-    continuation_logits = logits[continuation_start-1:-1]
-    softmax = torch.softmax(continuation_logits, dim=-1)
-    continuation_ids = input_ids[0, continuation_start:]
-    probs = softmax[torch.arange(len(continuation_ids)), continuation_ids]
-    return -torch.log(probs).sum().item()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -45,13 +28,10 @@ def replace_dijkstra(rvg: ReplacementVariantsGenerator) -> str:
         variants, num_variant_forms = rvg.get_variants(current.num_forms)
         if num_variant_forms == 0:
             return current.text
+        new_num_forms = current.num_forms + num_variant_forms
 
         for variant in variants:
-            input_ids = model.encode_with_eos(current.text + variant)
-            variant_len = len(model.tokenizer.encode(variant))
-            nlp = infer_continuation_nlp(input_ids, variant_len)
-            node = SearchNode(
-                current.text + variant, nlp,
-                current.num_forms + num_variant_forms
-            )
+            new_text = current.text + variant
+            new_nlp = nlp.infer_nlp(new_text)
+            node = SearchNode(new_text, new_nlp, new_num_forms)
             open_nodes.append(node)
