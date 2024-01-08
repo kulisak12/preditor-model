@@ -37,7 +37,7 @@ class ReplacementVariantsGenerator:
         )
 
     def get_variants(
-        self, num_prefix_forms: int
+        self, num_prefix_forms: int, min_variants: int = 1
     ) -> Tuple[Set[str], int]:
         """Construct possible extensions of a prefix of the text.
 
@@ -48,15 +48,15 @@ class ReplacementVariantsGenerator:
         next_form_index = num_prefix_forms
         while (
             next_form_index < len(self.tagged_forms)
-            and len(variants) == 1
+            and len(variants) <= min_variants
         ):
             form = self.tagged_forms[next_form_index]
             continuations = tags.generate_word_variations(form)
 
             next_form_index += 1
-            current_prefix = next(iter(variants))
             variants = {
                 current_prefix + continuation
                 for continuation in continuations
+                for current_prefix in variants
             }
         return (variants, next_form_index - num_prefix_forms)
