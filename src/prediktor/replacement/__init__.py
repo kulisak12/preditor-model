@@ -21,3 +21,4 @@ class Replacer:
 
 
 dijkstra_replacer = Replacer(dijkstra.replace_dijkstra)
+batch_dijkstra_replacer = Replacer(dijkstra.replace_dijkstra_batch)
