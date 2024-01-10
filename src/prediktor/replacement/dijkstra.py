@@ -18,20 +18,19 @@ def score(node: SearchNode) -> float:
     return node.nlp
 
 
-def replace_dijkstra(
-    rvg: ReplacementVariantsGenerator,
-    min_variants: int = 1,
-) -> str:
-    """Find best replacement using Dijkstra-inspired approach."""
+def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
+    """Find best replacement using Dijkstra-inspired approach.
+
+    A simplified version of replace_dijkstra without speedups.
+    Useful for testing.
+    """
     start_node = SearchNode("", 0, 0)
     open_nodes = [start_node]
 
     while True:
         current = min(open_nodes, key=score)
         open_nodes.remove(current)
-        variants, num_variant_forms = rvg.get_variants(
-            current.num_forms, min_variants
-        )
+        variants, num_variant_forms = rvg.get_variants(current.num_forms, 1)
         if num_variant_forms == 0:
             return current.text
         new_num_forms = current.num_forms + num_variant_forms
@@ -43,14 +42,19 @@ def replace_dijkstra(
             open_nodes.append(node)
 
 
-def replace_dijkstra_batch(
+def replace_dijkstra(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 1,
     relax_count: int = 8,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
-    Relaxes multiple nodes at once and to speed up the search.
+    Scores many texts at once to speed up the search.
+
+    Args:
+        min_variants: Generate at least this many variants for each
+            node, possible extending the text by more than one word.
+        relax_count: Number of nodes to relax at once.
     """
     start_node = SearchNode("", 0, 0)
     open_nodes = [start_node]
