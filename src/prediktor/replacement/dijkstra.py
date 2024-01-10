@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List
+from typing import Callable, List
 
 from prediktor.replacement import nlp
 from prediktor.replacement.variants import ReplacementVariantsGenerator
@@ -12,10 +12,15 @@ class SearchNode:
     num_forms: int
 
 
-def score(node: SearchNode) -> float:
-    """Score of a search node."""
-    # ? favor longer texts?
+def nlp_key(node: SearchNode) -> float:
+    """Straightforward scoring with NLP."""
     return node.nlp
+
+
+def lp_key(node: SearchNode, alpha: float = 0.5) -> float:
+    """Normalize score by a function of length."""
+    factor = (5 + 1)**alpha / (5 + node.num_forms)**alpha
+    return node.nlp * factor
 
 
 def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
@@ -28,7 +33,7 @@ def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
     open_nodes = [start_node]
 
     while True:
-        current = min(open_nodes, key=score)
+        current = min(open_nodes, key=nlp_key)
         open_nodes.remove(current)
         variants, num_variant_forms = rvg.get_variants(current.num_forms, 1)
         if num_variant_forms == 0:
@@ -46,6 +51,7 @@ def replace_dijkstra(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 1,
     relax_count: int = 8,
+    score_key: Callable[[SearchNode], float] = nlp_key,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
@@ -55,6 +61,7 @@ def replace_dijkstra(
         min_variants: Generate at least this many variants for each
             node, possible extending the text by more than one word.
         relax_count: Number of nodes to relax at once.
+        score_key: Function to use for scoring nodes.
     """
     start_node = SearchNode("", 0, 0)
     open_nodes = [start_node]
@@ -65,7 +72,7 @@ def replace_dijkstra(
         for i in range(relax_count):
             if not open_nodes:
                 break
-            current = min(open_nodes, key=score)
+            current = min(open_nodes, key=score_key)
             variants, num_variant_forms = rvg.get_variants(
                 current.num_forms, min_variants
             )

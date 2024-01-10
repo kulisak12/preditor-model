@@ -21,3 +21,6 @@ class Replacer:
 
 
 dijkstra_replacer = Replacer(dijkstra.replace_dijkstra)
+dijkstra_heuristic_replacer = Replacer(
+    lambda rvg: dijkstra.replace_dijkstra(rvg, score_key=dijkstra.lp_key)
+)
