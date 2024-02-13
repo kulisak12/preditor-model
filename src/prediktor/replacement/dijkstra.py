@@ -35,7 +35,7 @@ def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
     while True:
         current = min(open_nodes, key=nlp_key)
         open_nodes.remove(current)
-        variants, num_variant_forms = rvg.get_variants(current.num_forms, 1)
+        variants, num_variant_forms = rvg.get_variants(current.num_forms)
         if num_variant_forms == 0:
             return current.text
         new_num_forms = current.num_forms + num_variant_forms
@@ -49,7 +49,7 @@ def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
 
 def replace_dijkstra(
     rvg: ReplacementVariantsGenerator,
-    min_variants: int = 1,
+    min_variants: int = 2,
     relax_count: int = 8,
     score_key: Callable[[SearchNode], float] = nlp_key,
 ) -> str:
@@ -127,7 +127,7 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
     while open_nodes and len(finished_nodes) < 10:
         current = min(open_nodes, key=baseline_key)
         open_nodes.remove(current)
-        variants, num_variant_forms = rvg.get_variants(current.num_forms, 1)
+        variants, num_variant_forms = rvg.get_variants(current.num_forms)
         if num_variant_forms == 0:
             finished_nodes.append(current)
             continue

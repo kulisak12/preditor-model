@@ -37,21 +37,24 @@ class ReplacementVariantsGenerator:
         )
 
     def get_variants(
-        self, num_prefix_forms: int, min_variants: int = 1
+        self, num_prefix_forms: int, min_variants: int = 2
     ) -> Tuple[Set[str], int]:
         """Construct possible extensions of a prefix of the text.
 
         Returns a set of possible extensions and the number of forms in
         the extensions (same for all of them).
         """
+        min_variants = max(min_variants, 2)  # at least 2 variants needed
         variants = {""}
         next_form_index = num_prefix_forms
-        while (
-            next_form_index < len(self.tagged_forms)
-            and len(variants) <= min_variants
-        ):
+        while next_form_index < len(self.tagged_forms):
             form = self.tagged_forms[next_form_index]
             continuations = tags.generate_word_variations(form)
+            # Continue generating variants until we have enough.
+            # Once we have enough, we can still extend the variants
+            # as long as the number of them does not increase.
+            if len(variants) >= min_variants and len(continuations) > 1:
+                break
 
             next_form_index += 1
             variants = {
