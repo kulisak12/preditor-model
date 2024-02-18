@@ -35,15 +35,9 @@ def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
     while True:
         current = min(open_nodes, key=nlp_key)
         open_nodes.remove(current)
-        extensions, extension_end = rvg.get_extensions(current.num_forms)
-        if extension_end == rvg.num_forms:
+        if current.num_forms == rvg.num_forms:
             return current.text
-
-        new_texts = [current.text + extension for extension in extensions]
-        new_nlps = nlp.infer_nlp_batch(new_texts)
-        for new_text, new_nlp in zip(new_texts, new_nlps):
-            node = SearchNode(new_text, new_nlp, extension_end)
-            open_nodes.append(node)
+        open_nodes.extend(_relax_nodes([current], rvg))
 
 
 def replace_dijkstra(
@@ -66,34 +60,20 @@ def replace_dijkstra(
     open_nodes = [start_node]
 
     while True:
-        new_texts: List[str] = []
-        num_forms: List[int] = []
+        to_relax: List[SearchNode] = []
         for i in range(relax_count):
             if not open_nodes:
                 break
             current = min(open_nodes, key=score_key)
-            extensions, extension_end = rvg.get_extensions(
-                current.num_forms, min_variants
-            )
-            if extension_end == rvg.num_forms:
+            if current.num_forms == rvg.num_forms:
                 if i == 0:
                     return current.text
                 # can't return early, need to relax other nodes
                 break
             open_nodes.remove(current)
-            new_texts.extend(
-                current.text + extension
-                for extension in extensions
-            )
-            num_forms.extend(
-                extension_end
-                for _ in extensions
-            )
+            to_relax.append(current)
 
-        new_nlps = nlp.infer_nlp_batch(new_texts)
-        for new_text, new_nlp, forms in zip(new_texts, new_nlps, num_forms):
-            node = SearchNode(new_text, new_nlp, forms)
-            open_nodes.append(node)
+        open_nodes.extend(_relax_nodes(to_relax, rvg, min_variants))
 
 
 def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
@@ -126,11 +106,11 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
     while open_nodes and len(finished_nodes) < 10:
         current = min(open_nodes, key=baseline_key)
         open_nodes.remove(current)
-        extensions, extension_end = rvg.get_extensions(current.num_forms)
-        if extension_end == rvg.num_forms:
+        if current.num_forms == rvg.num_forms:
             finished_nodes.append(current)
             continue
 
+        extensions, extension_end = rvg.get_extensions(current.num_forms)
         new_texts = [current.text + extension for extension in extensions]
         new_nlps = nlp.infer_nlp_batch(new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
@@ -140,3 +120,25 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
         update_baselines(current.num_forms, extension_end, best_nlp_diff)
 
     return min(finished_nodes, key=baseline_key).text
+
+
+def _relax_nodes(
+    nodes: List[SearchNode],
+    rvg: ReplacementVariantsGenerator,
+    min_variants: int = 2,
+) -> List[SearchNode]:
+    """Relax nodes by scoring their extensions."""
+    to_score: List[SearchNode] = []
+    for node in nodes:
+        extensions, extension_end = rvg.get_extensions(
+            node.num_forms, min_variants
+        )
+        to_score.extend(
+            SearchNode(node.text + extension, node.nlp, extension_end)
+            for extension in extensions
+        )
+    new_nlps = nlp.infer_nlp_batch([node.text for node in to_score])
+    return [
+        SearchNode(node.text, new_nlp, node.num_forms)
+        for node, new_nlp in zip(to_score, new_nlps)
+    ]
