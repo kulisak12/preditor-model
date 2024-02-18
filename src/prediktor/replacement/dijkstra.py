@@ -35,15 +35,14 @@ def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
     while True:
         current = min(open_nodes, key=nlp_key)
         open_nodes.remove(current)
-        variants, num_variant_forms = rvg.get_variants(current.num_forms)
-        if num_variant_forms == 0:
+        extensions, extension_end = rvg.get_extensions(current.num_forms)
+        if extension_end == rvg.num_forms:
             return current.text
-        new_num_forms = current.num_forms + num_variant_forms
 
-        new_texts = [current.text + variant for variant in variants]
+        new_texts = [current.text + extension for extension in extensions]
         new_nlps = nlp.infer_nlp_batch(new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
-            node = SearchNode(new_text, new_nlp, new_num_forms)
+            node = SearchNode(new_text, new_nlp, extension_end)
             open_nodes.append(node)
 
 
@@ -73,22 +72,22 @@ def replace_dijkstra(
             if not open_nodes:
                 break
             current = min(open_nodes, key=score_key)
-            variants, num_variant_forms = rvg.get_variants(
+            extensions, extension_end = rvg.get_extensions(
                 current.num_forms, min_variants
             )
-            if num_variant_forms == 0:
+            if extension_end == rvg.num_forms:
                 if i == 0:
                     return current.text
                 # can't return early, need to relax other nodes
                 break
             open_nodes.remove(current)
             new_texts.extend(
-                current.text + variant
-                for variant in variants
+                current.text + extension
+                for extension in extensions
             )
             num_forms.extend(
-                current.num_forms + num_variant_forms
-                for _ in variants
+                extension_end
+                for _ in extensions
             )
 
         new_nlps = nlp.infer_nlp_batch(new_texts)
@@ -120,25 +119,24 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
     start_node = SearchNode("", 0, 0)
     open_nodes = [start_node]
     baselines = [0.0]
-    for _ in rvg.tagged_forms:
+    for _ in range(rvg.num_forms):
         baselines.append(baselines[-1] + 1000.0)
     finished_nodes: List[SearchNode] = []
 
     while open_nodes and len(finished_nodes) < 10:
         current = min(open_nodes, key=baseline_key)
         open_nodes.remove(current)
-        variants, num_variant_forms = rvg.get_variants(current.num_forms)
-        if num_variant_forms == 0:
+        extensions, extension_end = rvg.get_extensions(current.num_forms)
+        if extension_end == rvg.num_forms:
             finished_nodes.append(current)
             continue
-        new_num_forms = current.num_forms + num_variant_forms
 
-        new_texts = [current.text + variant for variant in variants]
+        new_texts = [current.text + extension for extension in extensions]
         new_nlps = nlp.infer_nlp_batch(new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
-            node = SearchNode(new_text, new_nlp, new_num_forms)
+            node = SearchNode(new_text, new_nlp, extension_end)
             open_nodes.append(node)
         best_nlp_diff = min(new_nlps) - current.nlp
-        update_baselines(current.num_forms, new_num_forms, best_nlp_diff)
+        update_baselines(current.num_forms, extension_end, best_nlp_diff)
 
     return min(finished_nodes, key=baseline_key).text

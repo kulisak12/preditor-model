@@ -8,21 +8,21 @@ class ReplacementVariantsGenerator:
         self, text: str,
         start: int, length: int, replacement: str
     ) -> None:
-        self.tagged_forms = tags.tag(text)
-        self._force_replacement(
-            self.tagged_forms, start, length, replacement
-        )
+        self._tagged_forms = tags.tag(text)
+        self._force_replacement(start, length, replacement)
+        self._variants = [
+            tags.generate_word_variations(form)
+            for form in self._tagged_forms
+        ]
 
-    @staticmethod
     def _force_replacement(
-        tagged_forms: List[tags.TaggedForm],
-        start: int, length: int, replacement: str
+        self, start: int, length: int, replacement: str
     ) -> None:
         """Force the form of the replaced form."""
         pos = 0
-        for i, form in enumerate(tagged_forms):
+        for i, form in enumerate(self._tagged_forms):
             if pos == start and len(form.form) == length:
-                tagged_forms[i] = tags.TaggedForm(
+                self._tagged_forms[i] = tags.TaggedForm(
                     lemma=None,
                     tag=None,
                     form=replacement
@@ -36,30 +36,51 @@ class ReplacementVariantsGenerator:
             "The replacement is not a single word in the text."
         )
 
-    def get_variants(
-        self, num_prefix_forms: int, min_variants: int = 2
+    @property
+    def num_forms(self) -> int:
+        return len(self._tagged_forms)
+
+    def get_extensions(
+        self, extension_begin: int, min_variants: int = 2
     ) -> Tuple[Set[str], int]:
         """Construct possible extensions of a prefix of the text.
 
-        Returns a set of possible extensions and the number of forms in
-        the extensions (same for all of them).
+        extension_begin:
+            The index of the form where the extension begins.
+        min_variants:
+            The minimum number of variants to construct.
+            There will be fewer if the end of the text is reached.
+
+        Return a tuple containing a set of possible extensions
+        and the index of the end of the extension (exclusive).
         """
         min_variants = max(min_variants, 2)  # at least 2 variants needed
-        variants = {""}
-        next_form_index = num_prefix_forms
-        while next_form_index < len(self.tagged_forms):
-            form = self.tagged_forms[next_form_index]
-            continuations = tags.generate_word_variations(form)
-            # Continue generating variants until we have enough.
-            # Once we have enough, we can still extend the variants
-            # as long as the number of them does not increase.
-            if len(variants) >= min_variants and len(continuations) > 1:
-                break
-
-            next_form_index += 1
-            variants = {
-                current_prefix + continuation
-                for continuation in continuations
-                for current_prefix in variants
+        extension_end = self._find_extension_end(extension_begin, min_variants)
+        extensions = {""}
+        for variants in self._variants[extension_begin:extension_end]:
+            extensions = {
+                extension + variant
+                for variant in variants
+                for extension in extensions
             }
-        return (variants, next_form_index - num_prefix_forms)
+        return (extensions, extension_end)
+
+    def _find_extension_end(
+        self, extension_begin: int, min_variants: int
+    ) -> int:
+        """Find the index of the end of the extension (exclusive).
+
+        Once the required number of variants is reached,
+        extend the variants as long as the number of them does not increase.
+        Ensure that the extensions do not end with whitespace.
+        """
+        last_non_whitespace = extension_begin
+        total_variants = 1
+        for i in range(extension_begin, len(self._variants)):
+            variants_here = self._variants[i]
+            if total_variants >= min_variants and len(variants_here) > 1:
+                return last_non_whitespace + 1
+            total_variants *= len(variants_here)
+            if self._tagged_forms[i].form.strip():
+                last_non_whitespace = i
+        return len(self._tagged_forms)
