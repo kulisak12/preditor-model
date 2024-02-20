@@ -1,8 +1,10 @@
-from typing import List
+from typing import List, Optional, Tuple
 
 import torch
 
 from prediktor import model
+from prediktor.replacement import caching
+from prediktor.replacement.search import SearchNode
 
 
 def infer_nlp(text: str) -> float:
@@ -26,6 +28,20 @@ def infer_nlp_batch(texts: List[str]) -> List[float]:
     ]
 
 
+def infer_nlp_cache(in_node: SearchNode) -> SearchNode:
+    """Infer the negative log probability of the text, using the cache."""
+    input_ids = [model.encode_with_eos(in_node.text)[0]]
+    trimmed_ids = _trim_and_pad(input_ids)
+    logits, caches = _get_outputs_cache(trimmed_ids, [in_node.cache])
+    input_start = trimmed_ids.shape[1] - logits.shape[1]
+    # FIXME: sum in bfloat16 and sum in float differ
+    nlp_diff = _nlp_from_logits(input_ids[0][input_start:], logits[0])
+    return SearchNode(
+        in_node.text, in_node.nlp + nlp_diff,
+        in_node.num_forms, len(input_ids[0]), caches[0]
+    )
+
+
 def _trim_and_pad(input_ids: List[torch.Tensor]) -> torch.Tensor:
     """Create the input ids tensor for the model.
 
@@ -46,3 +62,20 @@ def _nlp_from_logits(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
     softmax = torch.softmax(logits, dim=-1)
     probs = softmax[torch.arange(len(text_ids)), text_ids]
     return -torch.log(probs).sum().item()
+
+
+def _get_outputs_cache(
+    input_ids: torch.Tensor, caches: List[Optional[caching.Cache]]
+) -> Tuple[torch.Tensor, List[caching.Cache]]:
+    """Prepare inputs and get outputs from the model, using the cache."""
+    cache_batch = caching.join_caches_optional(caches)
+    model_kwargs = {
+        "use_cache": True,
+        "past_key_values": cache_batch,
+    }
+    model_inputs = model.model.prepare_inputs_for_generation(
+        input_ids, **model_kwargs
+    )
+    with torch.no_grad():
+        outputs = model.model(**model_inputs, return_dict=True)
+    return outputs.logits, caching.split_cache(outputs.past_key_values)
