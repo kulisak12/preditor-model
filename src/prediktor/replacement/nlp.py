@@ -56,7 +56,8 @@ def infer_nlp_batch_cache(in_nodes: List[SearchNode]) -> List[SearchNode]:
         SearchNode(
             node.text,
             node.nlp + _nlp_from_logits(input_ids[input_start:], logits),
-            node.num_forms, len(input_ids), cache
+            node.num_forms, len(input_ids),
+            caching.trim_cache(cache, len(input_ids) - 1)
         )
         for node, input_ids, logits, cache in zip(
             in_nodes, input_ids_batch, logits_batch, caches

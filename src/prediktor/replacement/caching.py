@@ -54,3 +54,17 @@ def _split_layer(layer: CacheLayer) -> List[CacheLayer]:
         (keys[i : i + 1], values[i : i + 1])  # keeps the batch dimension
         for i in range(keys.size(0))
     ]
+
+
+def trim_cache(cache: Cache, length: int) -> Cache:
+    """Trim the cache to the given length."""
+    return tuple(
+        _trim_layer(layer, length)
+        for layer in cache
+    )
+
+
+def _trim_layer(layer: CacheLayer, length: int) -> CacheLayer:
+    """Trim the layer to the given length."""
+    keys, values = layer
+    return keys[:, :, :length], values[:, :, :length]
