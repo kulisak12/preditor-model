@@ -41,6 +41,29 @@ def infer_nlp_cache(in_node: SearchNode) -> SearchNode:
     )
 
 
+def infer_nlp_batch_cache(in_nodes: List[SearchNode]) -> List[SearchNode]:
+    """Infer the negative log probability of the texts, using the cache.
+
+    The texts are processed in a batch, which is faster than processing
+    them one by one.
+    """
+    input_ids_batch = [model.encode_with_eos(node.text)[0] for node in in_nodes]
+    trimmed_batch = _trim_and_pad(input_ids_batch)
+    in_caches = [node.cache for node in in_nodes]
+    logits_batch, caches = _get_outputs_cache(trimmed_batch, in_caches)
+    input_start = trimmed_batch.shape[1] - logits_batch.shape[1]
+    return [
+        SearchNode(
+            node.text,
+            node.nlp + _nlp_from_logits(input_ids[input_start:], logits),
+            node.num_forms, len(input_ids), cache
+        )
+        for node, input_ids, logits, cache in zip(
+            in_nodes, input_ids_batch, logits_batch, caches
+        )
+    ]
+
+
 def _trim_and_pad(input_ids: List[torch.Tensor]) -> torch.Tensor:
     """Create the input ids tensor for the model.
 

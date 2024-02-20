@@ -124,3 +124,44 @@ def _relax_nodes(
         SearchNode(node.text, new_nlp, node.num_forms)
         for node, new_nlp in zip(to_score, new_nlps)
     ]
+
+
+def replace_dijkstra_cache(
+    rvg: ReplacementVariantsGenerator,
+    min_variants: int = 2,
+) -> str:
+    """Find best replacement using Dijkstra-inspired approach.
+
+    Scores many texts at once to speed up the search.
+    Caches the NLP scores to avoid redundant calculations.
+    """
+    start_node = SearchNode("", 0, 0, 0, None)
+    open_nodes = [start_node]
+
+    while True:
+        current = min(open_nodes, key=nlp_key)
+        open_nodes.remove(current)
+        if current.num_forms == rvg.num_forms:
+            return current.text
+        open_nodes.extend(_relax_nodes_cache([current], rvg, min_variants))
+
+
+def _relax_nodes_cache(
+    nodes: List[SearchNode],
+    rvg: ReplacementVariantsGenerator,
+    min_variants: int = 2,
+) -> List[SearchNode]:
+    """Relax nodes by scoring their extensions."""
+    to_score: List[SearchNode] = []
+    for node in nodes:
+        extensions, extension_end = rvg.get_extensions(
+            node.num_forms, min_variants
+        )
+        to_score.extend(
+            SearchNode(
+                node.text + extension, node.nlp,
+                extension_end, node.num_forms, node.cache
+            )
+            for extension in extensions
+        )
+    return nlp.infer_nlp_batch_cache(to_score)
