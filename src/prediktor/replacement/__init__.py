@@ -1,6 +1,6 @@
 from typing import Callable
 
-from prediktor.replacement import dijkstra
+from prediktor.replacement import dijkstra, search
 from prediktor.replacement.variants import ReplacementVariantsGenerator
 
 
@@ -22,5 +22,5 @@ class Replacer:
 
 dijkstra_replacer = Replacer(dijkstra.replace_dijkstra)
 dijkstra_heuristic_replacer = Replacer(
-    lambda rvg: dijkstra.replace_dijkstra(rvg, score_key=dijkstra.lp_key)
+    lambda rvg: dijkstra.replace_dijkstra(rvg, score_key=search.lp_key)
 )

@@ -1,26 +1,8 @@
-import dataclasses
 from typing import Callable, List
 
 from prediktor.replacement import nlp
+from prediktor.replacement.search import SearchNode, nlp_key
 from prediktor.replacement.variants import ReplacementVariantsGenerator
-
-
-@dataclasses.dataclass(frozen=True)
-class SearchNode:
-    text: str
-    nlp: float
-    num_forms: int
-
-
-def nlp_key(node: SearchNode) -> float:
-    """Straightforward scoring with NLP."""
-    return node.nlp
-
-
-def lp_key(node: SearchNode, alpha: float = 0.5) -> float:
-    """Normalize score by a function of length."""
-    factor = (5 + 1)**alpha / (5 + node.num_forms)**alpha
-    return node.nlp * factor
 
 
 def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
