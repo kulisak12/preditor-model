@@ -164,4 +164,11 @@ def _relax_nodes_cache(
             )
             for extension in extensions
         )
-    return nlp.infer_nlp_batch_cache(to_score)
+    nlp_diffs, caches = nlp.infer_nlp_batch_cache(
+        [node.text for node in to_score],
+        [node.cache for node in to_score],
+    )
+    return [
+        SearchNode(node.text, node.nlp + nlp_diff, node.num_forms, cache)
+        for node, nlp_diff, cache in zip(to_score, nlp_diffs, caches)
+    ]
