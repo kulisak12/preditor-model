@@ -135,7 +135,7 @@ def replace_dijkstra_cache(
     Scores many texts at once to speed up the search.
     Caches the NLP scores to avoid redundant calculations.
     """
-    start_node = SearchNode("", 0, 0, 0, None)
+    start_node = SearchNode("", 0, 0, None)
     open_nodes = [start_node]
 
     while True:
@@ -160,7 +160,7 @@ def _relax_nodes_cache(
         to_score.extend(
             SearchNode(
                 node.text + extension, node.nlp,
-                extension_end, node.num_forms, node.cache
+                extension_end, node.cache
             )
             for extension in extensions
         )

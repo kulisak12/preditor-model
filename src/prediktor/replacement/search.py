@@ -9,8 +9,13 @@ class SearchNode:
     text: str
     nlp: float
     num_forms: int
-    num_tokens: int = 0
     cache: Optional[caching.Cache] = None
+
+    @property
+    def cache_len(self) -> int:
+        if self.cache is None:
+            return 0
+        return self.cache[0][0].shape[2]
 
 
 ScoreKey = Callable[[SearchNode], float]

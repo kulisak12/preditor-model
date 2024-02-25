@@ -37,7 +37,7 @@ def infer_nlp_cache(in_node: SearchNode) -> SearchNode:
     nlp_diff = _nlp_from_logits(input_ids[0][input_start:], logits[0])
     return SearchNode(
         in_node.text, in_node.nlp + nlp_diff,
-        in_node.num_forms, len(input_ids[0]), caches[0]
+        in_node.num_forms, caches[0]
     )
 
 
@@ -56,7 +56,7 @@ def infer_nlp_batch_cache(in_nodes: List[SearchNode]) -> List[SearchNode]:
         SearchNode(
             node.text,
             node.nlp + _nlp_from_logits(input_ids[input_start:], logits),
-            node.num_forms, len(input_ids),
+            node.num_forms,
             caching.trim_cache(cache, len(input_ids) - 1)
         )
         for node, input_ids, logits, cache in zip(
