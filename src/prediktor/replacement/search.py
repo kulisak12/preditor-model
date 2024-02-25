@@ -13,9 +13,7 @@ class SearchNode:
 
     @property
     def cache_len(self) -> int:
-        if self.cache is None:
-            return 0
-        return self.cache[0][0].shape[2]
+        return caching.cache_len(self.cache)
 
 
 ScoreKey = Callable[[SearchNode], float]

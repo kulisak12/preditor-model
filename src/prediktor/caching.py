@@ -9,6 +9,13 @@ CacheLayer = Tuple[torch.Tensor, torch.Tensor]
 Cache = Tuple[CacheLayer, ...]
 
 
+def cache_len(cache: Optional[Cache]) -> int:
+    """Return the length of the cache."""
+    if cache is None:
+        return 0
+    return cache[0][0].size(2)
+
+
 def join_caches_optional(caches: List[Optional[Cache]]) -> Optional[Cache]:
     """Join the caches along the batch dimension.
 
