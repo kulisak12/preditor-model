@@ -1,7 +1,7 @@
-from typing import Callable, List
+from typing import List
 
 from prediktor.replacement import nlp
-from prediktor.replacement.search import SearchNode, nlp_key
+from prediktor.replacement.search import ScoreKey, SearchNode, nlp_key
 from prediktor.replacement.variants import ReplacementVariantsGenerator
 
 
@@ -26,7 +26,7 @@ def replace_dijkstra(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
     relax_count: int = 8,
-    score_key: Callable[[SearchNode], float] = nlp_key,
+    score_key: ScoreKey = nlp_key,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 

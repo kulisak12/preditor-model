@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Optional
+from typing import Callable, Optional
 
 from prediktor.replacement import caching
 
@@ -11,6 +11,9 @@ class SearchNode:
     num_forms: int
     num_tokens: int = 0
     cache: Optional[caching.Cache] = None
+
+
+ScoreKey = Callable[[SearchNode], float]
 
 
 def nlp_key(node: SearchNode) -> float:
