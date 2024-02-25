@@ -1,3 +1,4 @@
+import heapq
 from typing import List
 
 from prediktor.replacement import nlp
@@ -12,14 +13,15 @@ def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
     Useful for testing.
     """
     start_node = SearchNode("", 0, 0)
-    open_nodes = [start_node]
+    open_nodes = {start_node}
 
     while True:
         current = min(open_nodes, key=nlp_key)
         open_nodes.remove(current)
         if current.num_forms == rvg.num_forms:
             return current.text
-        open_nodes.extend(_relax_nodes([current], rvg))
+        relaxed = _relax_nodes([current], rvg)
+        open_nodes.update(relaxed)
 
 
 def replace_dijkstra(
@@ -39,23 +41,20 @@ def replace_dijkstra(
         score_key: Function to use for scoring nodes.
     """
     start_node = SearchNode("", 0, 0)
-    open_nodes = [start_node]
+    open_nodes = {start_node}
 
     while True:
-        to_relax: List[SearchNode] = []
-        for i in range(relax_count):
-            if not open_nodes:
-                break
-            current = min(open_nodes, key=score_key)
-            if current.num_forms == rvg.num_forms:
-                if i == 0:
-                    return current.text
-                # can't return early, need to relax other nodes
-                break
-            open_nodes.remove(current)
-            to_relax.append(current)
-
-        open_nodes.extend(_relax_nodes(to_relax, rvg, min_variants))
+        best = min(open_nodes, key=score_key)
+        if best.num_forms == rvg.num_forms:
+            return best.text
+        unfinished = (
+            node for node in open_nodes
+            if node.num_forms < rvg.num_forms
+        )
+        to_relax = heapq.nsmallest(relax_count, unfinished, key=score_key)
+        open_nodes.difference_update(to_relax)
+        relaxed = _relax_nodes(to_relax, rvg, min_variants)
+        open_nodes.update(relaxed)
 
 
 def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
@@ -79,7 +78,7 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
         return node.nlp - baselines[node.num_forms]
 
     start_node = SearchNode("", 0, 0)
-    open_nodes = [start_node]
+    open_nodes = {start_node}
     baselines = [0.0]
     for _ in range(rvg.num_forms):
         baselines.append(baselines[-1] + 1000.0)
@@ -97,7 +96,7 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
         new_nlps = nlp.infer_nlp(new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
             node = SearchNode(new_text, new_nlp, extension_end)
-            open_nodes.append(node)
+            open_nodes.add(node)
         best_nlp_diff = min(new_nlps) - current.nlp
         update_baselines(current.num_forms, extension_end, best_nlp_diff)
 
@@ -113,14 +112,15 @@ def replace_dijkstra_with_cache(
     Caches the NLP scores to avoid redundant calculations.
     """
     start_node = SearchNode("", 0, 0, None)
-    open_nodes = [start_node]
+    open_nodes = {start_node}
 
     while True:
         current = min(open_nodes, key=nlp_key)
         open_nodes.remove(current)
         if current.num_forms == rvg.num_forms:
             return current.text
-        open_nodes.extend(_relax_nodes_with_cache([current], rvg, min_variants))
+        relaxed = _relax_nodes_with_cache([current], rvg, min_variants)
+        open_nodes.update(relaxed)
 
 
 def _relax_nodes(
