@@ -94,7 +94,7 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
 
         extensions, extension_end = rvg.get_extensions(current.num_forms)
         new_texts = [current.text + extension for extension in extensions]
-        new_nlps = nlp.infer_nlp_batch(new_texts)
+        new_nlps = nlp.infer_nlp(new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
             node = SearchNode(new_text, new_nlp, extension_end)
             open_nodes.append(node)
@@ -104,13 +104,12 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
     return min(finished_nodes, key=baseline_key).text
 
 
-def replace_dijkstra_cache(
+def replace_dijkstra_with_cache(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
-    Scores many texts at once to speed up the search.
     Caches the NLP scores to avoid redundant calculations.
     """
     start_node = SearchNode("", 0, 0, None)
@@ -121,7 +120,7 @@ def replace_dijkstra_cache(
         open_nodes.remove(current)
         if current.num_forms == rvg.num_forms:
             return current.text
-        open_nodes.extend(_relax_nodes_cache([current], rvg, min_variants))
+        open_nodes.extend(_relax_nodes_with_cache([current], rvg, min_variants))
 
 
 def _relax_nodes(
@@ -131,24 +130,21 @@ def _relax_nodes(
 ) -> List[SearchNode]:
     """Relax nodes by scoring their extensions."""
     to_score = _create_nodes_to_score(nodes, rvg, min_variants)
-    new_nlps = nlp.infer_nlp_batch([node.text for node in to_score])
+    new_nlps = nlp.infer_nlp([node.text for node in to_score])
     return [
         SearchNode(node.text, new_nlp, node.num_forms)
         for node, new_nlp in zip(to_score, new_nlps)
     ]
 
 
-def _relax_nodes_cache(
+def _relax_nodes_with_cache(
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
 ) -> List[SearchNode]:
-    """Relax nodes by scoring their extensions.
-
-    Use the cache to avoid redundant calculations.
-    """
+    """Relax nodes by scoring their extensions. Use the cache."""
     to_score = _create_nodes_to_score(nodes, rvg, min_variants)
-    nlp_diffs, caches = nlp.infer_nlp_batch_cache(
+    nlp_diffs, caches = nlp.infer_nlp_with_cache(
         [node.text for node in to_score],
         [node.cache for node in to_score],
     )

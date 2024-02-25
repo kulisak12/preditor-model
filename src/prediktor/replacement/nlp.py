@@ -6,39 +6,39 @@ from prediktor import model
 from prediktor.replacement import caching
 
 
-def infer_nlp(text: str) -> float:
+def infer_nlp_single(text: str) -> float:
     """Infer the negative log probability of the text."""
-    return infer_nlp_batch([text])[0]
+    return infer_nlp([text])[0]
 
 
-def infer_nlp_batch(texts: List[str]) -> List[float]:
+def infer_nlp(texts: List[str]) -> List[float]:
     """Infer the negative log probability of the texts.
 
     The texts are processed in a batch, which is faster than processing
     them one by one.
     """
     input_ids_batch = [model.encode_with_eos(text)[0] for text in texts]
-    input_ids_padded = _trim_and_pad(input_ids_batch)
+    trimmed_batch = _trim_and_pad(input_ids_batch)
     with torch.no_grad():
-        logits_batch = model.model(input_ids_padded).logits
+        logits_batch = model.model(trimmed_batch).logits
     return [
         _nlp_from_logits(input_ids, logits)
         for input_ids, logits in zip(input_ids_batch, logits_batch)
     ]
 
 
-def infer_nlp_batch_cache(
+def infer_nlp_with_cache(
     texts: List[str],
     in_caches: List[Optional[caching.Cache]],
 ) -> Tuple[List[float], List[caching.Cache]]:
-    """Infer the negative log probability of the texts, using the cache.
+    """Infer the negative log probability of the texts. Use the cache.
 
     The texts are processed in a batch, which is faster than processing
     them one by one.
     """
     input_ids_batch = [model.encode_with_eos(text)[0] for text in texts]
     trimmed_batch = _trim_and_pad(input_ids_batch)
-    logits_batch, caches = _get_outputs_cache(trimmed_batch, in_caches)
+    logits_batch, caches = _get_outputs_with_cache(trimmed_batch, in_caches)
     input_start = trimmed_batch.shape[1] - logits_batch.shape[1]
     nlps = [
         _nlp_from_logits(input_ids[input_start:], logits)
@@ -74,10 +74,10 @@ def _nlp_from_logits(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
     return -torch.log(probs).sum().item()
 
 
-def _get_outputs_cache(
+def _get_outputs_with_cache(
     input_ids: torch.Tensor, caches: List[Optional[caching.Cache]]
 ) -> Tuple[torch.Tensor, List[caching.Cache]]:
-    """Prepare inputs and get outputs from the model, using the cache."""
+    """Prepare inputs and get outputs from the model. Use the cache."""
     cache_batch = caching.join_caches_optional(caches)
     model_kwargs = {
         "use_cache": True,
