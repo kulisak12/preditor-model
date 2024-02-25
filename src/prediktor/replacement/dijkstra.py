@@ -1,7 +1,7 @@
 import heapq
 from typing import List
 
-from prediktor.replacement import nlp
+from prediktor import nlp
 from prediktor.replacement.search import ScoreKey, SearchNode, nlp_key
 from prediktor.replacement.variants import ReplacementVariantsGenerator
 
