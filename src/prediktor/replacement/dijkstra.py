@@ -1,5 +1,5 @@
 import heapq
-from typing import List
+from typing import Collection, Iterable, List, Tuple
 
 from prediktor import nlp
 from prediktor.replacement.search import ScoreKey, SearchNode, nlp_key
@@ -106,6 +106,9 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
 def replace_dijkstra_with_cache(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
+    relax_count: int = 8,
+    pool_size: int = 40,
+    score_key: ScoreKey = nlp_key,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
@@ -115,12 +118,71 @@ def replace_dijkstra_with_cache(
     open_nodes = {start_node}
 
     while True:
-        current = min(open_nodes, key=nlp_key)
-        open_nodes.remove(current)
-        if current.num_forms == rvg.num_forms:
-            return current.text
-        relaxed = _relax_nodes_with_cache([current], rvg, min_variants)
+        best = min(open_nodes, key=score_key)
+        if best.num_forms == rvg.num_forms:
+            return best.text
+        unfinished = (
+            node for node in open_nodes
+            if node.num_forms < rvg.num_forms
+        )
+        to_relax = _select_nodes_to_relax_with_cache(
+            best, unfinished, relax_count, pool_size, score_key
+        )
+        open_nodes.difference_update(to_relax)
+        relaxed = _relax_nodes_with_cache(to_relax, rvg, min_variants)
         open_nodes.update(relaxed)
+
+
+def _select_nodes_to_relax_with_cache(
+    best: SearchNode,
+    unfinished: Iterable[SearchNode],
+    relax_count: int,
+    pool_size: int,
+    score_key: ScoreKey,
+) -> List[SearchNode]:
+    """Select the best nodes to relax.
+
+    Always include the best node.
+    Then, create a pool of the best nodes and select a subset of them
+    such that the lengths of their caches are as similar as possible.
+    """
+    def sort_pool(pool: List[SearchNode]) -> List[SearchNode]:
+        """Sort the pool by cache length.
+
+        If equal, move nodes with a better score closer to the best node.
+        """
+        shorter = [node for node in pool if node.cache_len <= best.cache_len]
+        longer = [node for node in pool if node.cache_len > best.cache_len]
+        shorter.sort(key=lambda node: (node.cache_len, -score_key(node)))
+        longer.sort(key=lambda node: (node.cache_len, score_key(node)))
+        return shorter + longer
+
+    def find_most_similar_subarray(array: List[int], length: int) -> int:
+        """Find a subarray such that the sum of its elements differs the least
+        from its minimum multiplied by the length.
+        """
+        min_diff = sum(array)
+        start_index = 0
+        for i in range(len(array) - length + 1):
+            subarray = array[i:i+length]
+            subarray_sum = sum(subarray)
+            min_element = min(subarray)
+            diff = abs(subarray_sum - min_element * length)
+            if diff < min_diff:
+                min_diff = diff
+                start_index = i
+        return start_index
+
+    pool = heapq.nsmallest(pool_size, unfinished, key=score_key)
+    if len(pool) <= relax_count:
+        return pool
+    pool = sort_pool(pool)
+    best_index = pool.index(best)
+    # ensure that the best node is included
+    pool = pool[max(0, best_index - relax_count + 1):best_index + relax_count]
+    lengths = [node.cache_len for node in pool]
+    start = find_most_similar_subarray(lengths, relax_count)
+    return pool[start:start+relax_count]
 
 
 def _relax_nodes(
