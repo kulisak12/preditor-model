@@ -104,28 +104,6 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
     return min(finished_nodes, key=baseline_key).text
 
 
-def _relax_nodes(
-    nodes: List[SearchNode],
-    rvg: ReplacementVariantsGenerator,
-    min_variants: int = 2,
-) -> List[SearchNode]:
-    """Relax nodes by scoring their extensions."""
-    to_score: List[SearchNode] = []
-    for node in nodes:
-        extensions, extension_end = rvg.get_extensions(
-            node.num_forms, min_variants
-        )
-        to_score.extend(
-            SearchNode(node.text + extension, node.nlp, extension_end)
-            for extension in extensions
-        )
-    new_nlps = nlp.infer_nlp_batch([node.text for node in to_score])
-    return [
-        SearchNode(node.text, new_nlp, node.num_forms)
-        for node, new_nlp in zip(to_score, new_nlps)
-    ]
-
-
 def replace_dijkstra_cache(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
@@ -146,24 +124,30 @@ def replace_dijkstra_cache(
         open_nodes.extend(_relax_nodes_cache([current], rvg, min_variants))
 
 
-def _relax_nodes_cache(
+def _relax_nodes(
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
 ) -> List[SearchNode]:
     """Relax nodes by scoring their extensions."""
-    to_score: List[SearchNode] = []
-    for node in nodes:
-        extensions, extension_end = rvg.get_extensions(
-            node.num_forms, min_variants
-        )
-        to_score.extend(
-            SearchNode(
-                node.text + extension, node.nlp,
-                extension_end, node.cache
-            )
-            for extension in extensions
-        )
+    to_score = _create_nodes_to_score(nodes, rvg, min_variants)
+    new_nlps = nlp.infer_nlp_batch([node.text for node in to_score])
+    return [
+        SearchNode(node.text, new_nlp, node.num_forms)
+        for node, new_nlp in zip(to_score, new_nlps)
+    ]
+
+
+def _relax_nodes_cache(
+    nodes: List[SearchNode],
+    rvg: ReplacementVariantsGenerator,
+    min_variants: int = 2,
+) -> List[SearchNode]:
+    """Relax nodes by scoring their extensions.
+
+    Use the cache to avoid redundant calculations.
+    """
+    to_score = _create_nodes_to_score(nodes, rvg, min_variants)
     nlp_diffs, caches = nlp.infer_nlp_batch_cache(
         [node.text for node in to_score],
         [node.cache for node in to_score],
@@ -172,3 +156,21 @@ def _relax_nodes_cache(
         SearchNode(node.text, node.nlp + nlp_diff, node.num_forms, cache)
         for node, nlp_diff, cache in zip(to_score, nlp_diffs, caches)
     ]
+
+
+def _create_nodes_to_score(
+    nodes: List[SearchNode],
+    rvg: ReplacementVariantsGenerator,
+    min_variants: int = 2,
+) -> List[SearchNode]:
+    """Create nodes to score by extending the given nodes."""
+    to_score: List[SearchNode] = []
+    for node in nodes:
+        extensions, extension_end = rvg.get_extensions(
+            node.num_forms, min_variants
+        )
+        to_score.extend(
+            SearchNode(node.text + extension, node.nlp, extension_end, node.cache)
+            for extension in extensions
+        )
+    return to_score
