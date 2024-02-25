@@ -35,7 +35,14 @@ def _join_layers(layers: Iterable[CacheLayer]) -> CacheLayer:
     """Join the layers along the batch dimension."""
     keys = [layer[0] for layer in layers]
     values = [layer[1] for layer in layers]
-    return torch.cat(keys, dim=0), torch.cat(values, dim=0)
+    return _truncate_cat(keys), _truncate_cat(values)
+
+
+def _truncate_cat(tensors: List[torch.Tensor]) -> torch.Tensor:
+    """Truncate and concatenate the tensors along the batch dimension."""
+    min_len = min(tensor.size(2) for tensor in tensors)
+    truncated = [tensor[:, :, :min_len] for tensor in tensors]
+    return torch.cat(truncated, dim=0)
 
 
 def split_cache(cache: Cache) -> List[Cache]:
