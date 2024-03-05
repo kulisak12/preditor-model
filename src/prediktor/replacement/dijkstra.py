@@ -1,30 +1,12 @@
 import heapq
-from typing import Collection, Iterable, List, Tuple
+from typing import Iterable, List
 
 from prediktor import nlp
 from prediktor.replacement.search import ScoreKey, SearchNode, nlp_key
 from prediktor.replacement.variants import ReplacementVariantsGenerator
 
 
-def replace_dijkstra_simple(rvg: ReplacementVariantsGenerator) -> str:
-    """Find best replacement using Dijkstra-inspired approach.
-
-    A simplified version of replace_dijkstra without speedups.
-    Useful for testing.
-    """
-    start_node = SearchNode("", 0, 0)
-    open_nodes = {start_node}
-
-    while True:
-        current = min(open_nodes, key=nlp_key)
-        open_nodes.remove(current)
-        if current.num_forms == rvg.num_forms:
-            return current.text
-        relaxed = _relax_nodes([current], rvg)
-        open_nodes.update(relaxed)
-
-
-def replace_dijkstra(
+def replace(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
     relax_count: int = 8,
@@ -34,11 +16,10 @@ def replace_dijkstra(
 
     Scores many texts at once to speed up the search.
 
-    Args:
-        min_variants: Generate at least this many variants for each
-            node, possible extending the text by more than one word.
-        relax_count: Number of nodes to relax at once.
-        score_key: Function to use for scoring nodes.
+    min_variants: Generate at least this many variants for each node,
+        possibly extending the text by more than one word.
+    relax_count: Number of nodes to relax at once.
+    score_key: Function to use for scoring nodes.
     """
     start_node = SearchNode("", 0, 0)
     open_nodes = {start_node}
@@ -57,7 +38,7 @@ def replace_dijkstra(
         open_nodes.update(relaxed)
 
 
-def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
+def replace_baseline(rvg: ReplacementVariantsGenerator) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
     Keep track of the best NLP for each word. Calculate the score as the
@@ -103,7 +84,7 @@ def replace_dijkstra_baseline(rvg: ReplacementVariantsGenerator) -> str:
     return min(finished_nodes, key=baseline_key).text
 
 
-def replace_dijkstra_with_cache(
+def replace_with_cache(
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
     relax_count: int = 8,
@@ -188,7 +169,7 @@ def _select_nodes_to_relax_with_cache(
 def _relax_nodes(
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
-    min_variants: int = 2,
+    min_variants,
 ) -> List[SearchNode]:
     """Relax nodes by scoring their extensions."""
     to_score = _create_nodes_to_score(nodes, rvg, min_variants)
@@ -202,7 +183,7 @@ def _relax_nodes(
 def _relax_nodes_with_cache(
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
-    min_variants: int = 2,
+    min_variants,
 ) -> List[SearchNode]:
     """Relax nodes by scoring their extensions. Use the cache."""
     to_score = _create_nodes_to_score(nodes, rvg, min_variants)
@@ -219,7 +200,7 @@ def _relax_nodes_with_cache(
 def _create_nodes_to_score(
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
-    min_variants: int = 2,
+    min_variants,
 ) -> List[SearchNode]:
     """Create nodes to score by extending the given nodes."""
     to_score: List[SearchNode] = []

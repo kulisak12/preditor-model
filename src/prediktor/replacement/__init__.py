@@ -20,7 +20,7 @@ class Replacer:
         return self.func(rvg)
 
 
-dijkstra_replacer = Replacer(dijkstra.replace_dijkstra)
+dijkstra_replacer = Replacer(dijkstra.replace)
 dijkstra_heuristic_replacer = Replacer(
-    lambda rvg: dijkstra.replace_dijkstra(rvg, score_key=search.lp_key)
+    lambda rvg: dijkstra.replace(rvg, score_key=search.lp_key)
 )
