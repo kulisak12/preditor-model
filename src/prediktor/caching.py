@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Iterable, List, Optional, Tuple
 
 import torch
@@ -9,14 +10,21 @@ CacheLayer = Tuple[torch.Tensor, torch.Tensor]
 Cache = Tuple[CacheLayer, ...]
 
 
-def cache_len(cache: Optional[Cache]) -> int:
+@dataclasses.dataclass(frozen=True)
+class LazyCache:
+    """A cache that has not yet been trimmed."""
+    cache: Cache
+    length: int
+
+
+def cache_len(cache: Optional[LazyCache]) -> int:
     """Return the length of the cache."""
     if cache is None:
         return 0
-    return cache[0][0].size(2)
+    return cache.length
 
 
-def join_caches_optional(caches: List[Optional[Cache]]) -> Optional[Cache]:
+def join_caches_optional(caches: List[Optional[LazyCache]]) -> Optional[Cache]:
     """Join the caches along the batch dimension.
 
     If any of the caches is None, the result is None.
@@ -29,26 +37,30 @@ def join_caches_optional(caches: List[Optional[Cache]]) -> Optional[Cache]:
     return None
 
 
-def join_caches(caches: Iterable[Cache]) -> Cache:
+def join_caches(lazy_caches: Iterable[LazyCache]) -> Cache:
     """Join the caches along the batch dimension."""
+    length = min(cache.length for cache in lazy_caches)
+    caches = (cache.cache for cache in lazy_caches)
     return tuple(
-        _join_layers(layers)
+        _join_layers(layers, length)
         # one layer for each of the caches
         for layers in zip(*caches)
     )
 
 
-def _join_layers(layers: Iterable[CacheLayer]) -> CacheLayer:
-    """Join the layers along the batch dimension."""
+def _join_layers(layers: Iterable[CacheLayer], length: int) -> CacheLayer:
+    """Join the layers along the batch dimension.
+
+    Truncate the layers to the given length.
+    """
     keys = [layer[0] for layer in layers]
     values = [layer[1] for layer in layers]
-    return _truncate_cat(keys), _truncate_cat(values)
+    return _truncate_cat(keys, length), _truncate_cat(values, length)
 
 
-def _truncate_cat(tensors: List[torch.Tensor]) -> torch.Tensor:
-    """Truncate and concatenate the tensors along the batch dimension."""
-    min_len = min(tensor.size(2) for tensor in tensors)
-    truncated = [tensor[:, :, :min_len] for tensor in tensors]
+def _truncate_cat(tensors: List[torch.Tensor], length: int) -> torch.Tensor:
+    """Truncate the tensors and concatenate them along the batch dimension."""
+    truncated = [tensor[:, :, :length] for tensor in tensors]
     return torch.cat(truncated, dim=0)
 
 
@@ -68,17 +80,3 @@ def _split_layer(layer: CacheLayer) -> List[CacheLayer]:
         (keys[i : i + 1], values[i : i + 1])  # keeps the batch dimension
         for i in range(keys.size(0))
     ]
-
-
-def trim_cache(cache: Cache, length: int) -> Cache:
-    """Trim the cache to the given length."""
-    return tuple(
-        _trim_layer(layer, length)
-        for layer in cache
-    )
-
-
-def _trim_layer(layer: CacheLayer, length: int) -> CacheLayer:
-    """Trim the layer to the given length."""
-    keys, values = layer
-    return keys[:, :, :length], values[:, :, :length]

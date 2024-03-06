@@ -30,8 +30,8 @@ def infer_nlp(model: Model, texts: List[str]) -> List[float]:
 def infer_nlp_with_cache(
     model: Model,
     texts: List[str],
-    in_caches: List[Optional[caching.Cache]],
-) -> Tuple[List[float], List[caching.Cache]]:
+    in_caches: List[Optional[caching.LazyCache]],
+) -> Tuple[List[float], List[caching.LazyCache]]:
     """Infer the negative log probability of the texts. Use the cache.
 
     The texts are processed in a batch, which is faster than processing
@@ -46,7 +46,7 @@ def infer_nlp_with_cache(
         for input_ids, logits, start in zip(input_ids_batch, logits_batch, starts)
     ]
     out_caches = [
-        caching.trim_cache(cache, len(input_ids) - 1)
+        caching.LazyCache(cache, len(input_ids) - 1)
         for input_ids, cache in zip(input_ids_batch, caches)
     ]
     return nlps, out_caches
@@ -84,7 +84,7 @@ def _nlp_from_logits(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
 def _get_outputs_with_cache(
     model: Model,
     input_ids: torch.Tensor,
-    caches: List[Optional[caching.Cache]]
+    caches: List[Optional[caching.LazyCache]]
 ) -> Tuple[torch.Tensor, List[caching.Cache]]:
     """Prepare inputs and get outputs from the model. Use the cache."""
     cache_batch = caching.join_caches_optional(caches)

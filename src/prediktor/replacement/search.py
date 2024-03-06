@@ -9,7 +9,7 @@ class SearchNode:
     text: str
     nlp: float
     num_forms: int
-    cache: Optional[caching.Cache] = None
+    cache: Optional[caching.LazyCache] = None
 
     @property
     def cache_len(self) -> int:
