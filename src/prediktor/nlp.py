@@ -76,8 +76,7 @@ def _nlp_from_logits(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
     """
     # prediction for a token is in the previous position
     text_ids = input_ids[1:]
-    # casting to avoid different results in bfloat16 and float
-    softmax = torch.softmax(logits.to(float), dim=-1)
+    softmax = torch.softmax(logits, dim=-1)
     probs = softmax[torch.arange(len(text_ids)), text_ids]
     return -torch.log(probs).sum().item()
 
