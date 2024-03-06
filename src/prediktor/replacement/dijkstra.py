@@ -2,11 +2,13 @@ import heapq
 from typing import Iterable, List
 
 from prediktor import nlp
+from prediktor.model.model import Model
 from prediktor.replacement.search import ScoreKey, SearchNode, nlp_key
 from prediktor.replacement.variants import ReplacementVariantsGenerator
 
 
 def replace(
+    model: Model,
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
     relax_count: int = 8,
@@ -34,11 +36,14 @@ def replace(
         )
         to_relax = heapq.nsmallest(relax_count, unfinished, key=score_key)
         open_nodes.difference_update(to_relax)
-        relaxed = _relax_nodes(to_relax, rvg, min_variants)
+        relaxed = _relax_nodes(model, to_relax, rvg, min_variants)
         open_nodes.update(relaxed)
 
 
-def replace_baseline(rvg: ReplacementVariantsGenerator) -> str:
+def replace_baseline(
+    model: Model,
+    rvg: ReplacementVariantsGenerator
+) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
     Keep track of the best NLP for each word. Calculate the score as the
@@ -74,7 +79,7 @@ def replace_baseline(rvg: ReplacementVariantsGenerator) -> str:
 
         extensions, extension_end = rvg.get_extensions(current.num_forms)
         new_texts = [current.text + extension for extension in extensions]
-        new_nlps = nlp.infer_nlp(new_texts)
+        new_nlps = nlp.infer_nlp(model, new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
             node = SearchNode(new_text, new_nlp, extension_end)
             open_nodes.add(node)
@@ -85,6 +90,7 @@ def replace_baseline(rvg: ReplacementVariantsGenerator) -> str:
 
 
 def replace_with_cache(
+    model: Model,
     rvg: ReplacementVariantsGenerator,
     min_variants: int = 2,
     relax_count: int = 8,
@@ -110,7 +116,7 @@ def replace_with_cache(
             best, unfinished, relax_count, pool_size, score_key
         )
         open_nodes.difference_update(to_relax)
-        relaxed = _relax_nodes_with_cache(to_relax, rvg, min_variants)
+        relaxed = _relax_nodes_with_cache(model, to_relax, rvg, min_variants)
         open_nodes.update(relaxed)
 
 
@@ -167,13 +173,14 @@ def _select_nodes_to_relax_with_cache(
 
 
 def _relax_nodes(
+    model: Model,
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
     min_variants,
 ) -> List[SearchNode]:
     """Relax nodes by scoring their extensions."""
     to_score = _create_nodes_to_score(nodes, rvg, min_variants)
-    new_nlps = nlp.infer_nlp([node.text for node in to_score])
+    new_nlps = nlp.infer_nlp(model, [node.text for node in to_score])
     return [
         SearchNode(node.text, new_nlp, node.num_forms)
         for node, new_nlp in zip(to_score, new_nlps)
@@ -181,6 +188,7 @@ def _relax_nodes(
 
 
 def _relax_nodes_with_cache(
+    model: Model,
     nodes: List[SearchNode],
     rvg: ReplacementVariantsGenerator,
     min_variants,
@@ -188,6 +196,7 @@ def _relax_nodes_with_cache(
     """Relax nodes by scoring their extensions. Use the cache."""
     to_score = _create_nodes_to_score(nodes, rvg, min_variants)
     nlp_diffs, caches = nlp.infer_nlp_with_cache(
+        model,
         [node.text for node in to_score],
         [node.cache for node in to_score],
     )

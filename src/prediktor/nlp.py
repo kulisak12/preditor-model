@@ -2,21 +2,22 @@ from typing import List, Optional, Tuple
 
 import torch
 
-from prediktor import caching, model
+from prediktor import caching
+from prediktor.model.model import Model
 
 
-def infer_nlp_single(text: str) -> float:
+def infer_nlp_single(model: Model, text: str) -> float:
     """Infer the negative log probability of the text."""
-    return infer_nlp([text])[0]
+    return infer_nlp(model, [text])[0]
 
 
-def infer_nlp(texts: List[str]) -> List[float]:
+def infer_nlp(model: Model, texts: List[str]) -> List[float]:
     """Infer the negative log probability of the texts.
 
     The texts are processed in a batch, which is faster than processing
     them one by one.
     """
-    input_ids_batch = [model.encode_with_eos(text)[0] for text in texts]
+    input_ids_batch = [_encode_with_eos(model, text)[0] for text in texts]
     trimmed_batch = _trim_and_pad(input_ids_batch)
     with torch.no_grad():
         logits_batch = model.model(trimmed_batch).logits
@@ -27,6 +28,7 @@ def infer_nlp(texts: List[str]) -> List[float]:
 
 
 def infer_nlp_with_cache(
+    model: Model,
     texts: List[str],
     in_caches: List[Optional[caching.Cache]],
 ) -> Tuple[List[float], List[caching.Cache]]:
@@ -35,9 +37,9 @@ def infer_nlp_with_cache(
     The texts are processed in a batch, which is faster than processing
     them one by one.
     """
-    input_ids_batch = [model.encode_with_eos(text)[0] for text in texts]
+    input_ids_batch = [_encode_with_eos(model, text)[0] for text in texts]
     trimmed_batch = _trim_and_pad(input_ids_batch)
-    logits_batch, caches = _get_outputs_with_cache(trimmed_batch, in_caches)
+    logits_batch, caches = _get_outputs_with_cache(model, trimmed_batch, in_caches)
     starts = [caching.cache_len(cache) for cache in in_caches]
     nlps = [
         _nlp_from_logits(input_ids[start:], logits)
@@ -48,6 +50,13 @@ def infer_nlp_with_cache(
         for input_ids, cache in zip(input_ids_batch, caches)
     ]
     return nlps, out_caches
+
+
+def _encode_with_eos(model: Model, text: str) -> torch.Tensor:
+    """Encode text with EOS token."""
+    input_ids = model.tokenizer.encode(text, return_tensors="pt")
+    eos_tensor = torch.tensor(model.tokenizer.eos_token_id).reshape(1, 1)
+    return torch.cat([eos_tensor, input_ids], dim=-1).to(model.device)
 
 
 def _trim_and_pad(input_ids: List[torch.Tensor]) -> torch.Tensor:
@@ -74,7 +83,9 @@ def _nlp_from_logits(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
 
 
 def _get_outputs_with_cache(
-    input_ids: torch.Tensor, caches: List[Optional[caching.Cache]]
+    model: Model,
+    input_ids: torch.Tensor,
+    caches: List[Optional[caching.Cache]]
 ) -> Tuple[torch.Tensor, List[caching.Cache]]:
     """Prepare inputs and get outputs from the model. Use the cache."""
     cache_batch = caching.join_caches_optional(caches)

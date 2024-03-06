@@ -1,15 +1,15 @@
 from typing import List
 
-from prediktor import model
 from prediktor.config import Config
+from prediktor.model.model import Model
 
 PROMPT = "Write a sentence such that it ends with:"
 
 
-def infill_between(before_cursor: str, after_cursor: str) -> str:
+def infill_between(model: Model, before_cursor: str, after_cursor: str) -> str:
     """Generate an infill between the given strings."""
     prompt = format_infill_prompt(before_cursor, after_cursor)
-    decoded = beam_search(prompt, after_cursor)
+    decoded = beam_search(model, prompt, after_cursor)
     outputs = [extract_output(text, before_cursor) for text in decoded]
     best_output = get_best_output(outputs, after_cursor).rstrip()
     return best_output
@@ -50,6 +50,7 @@ def get_best_output(outputs: List[str], after: str) -> str:
 
 
 def beam_search(
+    model: Model,
     input_text: str,
     end: str = "",
 ) -> List[str]:

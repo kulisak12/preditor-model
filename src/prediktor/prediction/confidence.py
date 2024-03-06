@@ -1,10 +1,10 @@
 import torch
 
-from prediktor import model
 from prediktor.config import Config
+from prediktor.model.model import Model
 
 
-def generate(input_text: str) -> str:
+def generate(model: Model, input_text: str) -> str:
     """Use the model.model to generate a continuation of the input text.
 
     Uses top-k sampling.

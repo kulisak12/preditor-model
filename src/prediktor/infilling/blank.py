@@ -1,7 +1,7 @@
 from typing import Any, Iterable, List
 
-from prediktor import model
 from prediktor.config import Config
+from prediktor.model.model import Model
 
 PROMPT = """\
 ### Instruction:
@@ -20,10 +20,10 @@ bad_words.extend(" " * i for i in range(2, 10))
 bad_words.extend("_" * i for i in range(2, 10))
 
 
-def infill_between(before_cursor: str, after_cursor: str) -> str:
+def infill_between(model: Model, before_cursor: str, after_cursor: str) -> str:
     """Generate an infill between the given strings."""
     prompt = format_infill_prompt(before_cursor, after_cursor)
-    decoded = beam_search(prompt, bad_words, after_cursor)
+    decoded = beam_search(model, prompt, bad_words, after_cursor)
     outputs = [extract_output(text, before_cursor) for text in decoded]
     best_output = get_best_output(outputs, after_cursor).rstrip()
     return best_output
@@ -69,6 +69,7 @@ def get_best_output(outputs: List[str], after: str) -> str:
 
 
 def beam_search(
+    model: Model,
     input_text: str,
     bad_words: Iterable[str],
     end: str = "",
@@ -77,7 +78,7 @@ def beam_search(
     num_end_tokens = len(model.tokenizer.encode(end, add_special_tokens=False))
     gen_ids = model.model.generate(
         input_ids,
-        bad_words_ids=get_bad_tokens(bad_words),
+        bad_words_ids=get_bad_tokens(model, bad_words),
         max_new_tokens=num_end_tokens + Config.max_length,
         num_return_sequences=Config.num_beams,
         num_beams=Config.num_beams,
@@ -89,12 +90,15 @@ def beam_search(
     return decoded_texts
 
 
-def get_bad_tokens(bad_words: Iterable[str]) -> List[Any]:
+def get_bad_tokens(model: Model, bad_words: Iterable[str]) -> List[Any]:
     "Converts a sequence of words into a list of tokens"
     tokens_list = []
     for word in bad_words:
-        # some model.tokenizers accept the prefix space, some need the parameter
-        tokenized_word = model.tokenizer_with_prefix([" " + word], add_special_tokens=False).input_ids[0]
+        # some model.tokenizers accept the prefix space,
+        # some need the special tokenizer
+        tokenized_word = model.prefix_space_tokenizer(
+            [" " + word], add_special_tokens=False
+        ).input_ids[0]
         tokens_list.append(tokenized_word)
         tokenized_word = model.tokenizer([word], add_special_tokens=False).input_ids[0]
         tokens_list.append(tokenized_word)
