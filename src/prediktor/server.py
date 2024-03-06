@@ -2,9 +2,13 @@ from typing import Any
 
 import flask
 
-from prediktor import infilling, prediction
+from prediktor.config import Config
+from prediktor.infilling import infilling
+from prediktor.model.hf import HFModel
+from prediktor.prediction import prediction
 
 app = flask.Flask(__name__)
+model = HFModel(Config.model_path, Config.max_length)
 
 
 @app.route("/status/")
@@ -18,7 +22,7 @@ def submit_text_for_prediction() -> flask.Response:
     text: str = request["text"]
     cursor_pos: int = request["cursor"]
     if cursor_pos >= len(text.rstrip()):
-        output = prediction.confidence_predictor.predict(text)
+        output = prediction.predict(model, text)
     else:
-        output = infilling.blank_infiller.infill(text, cursor_pos)
+        output = infilling.infill(model, text, cursor_pos)
     return flask.jsonify({"prediction": output})
