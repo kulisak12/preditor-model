@@ -26,4 +26,12 @@ dependencies = [
 
 [tool.mypy]
 strict = false
+
+[[tool.mypy.overrides]]
+module = [
+    "dotenv",
+    "torch",
+    "transformers",
+    "ufal",
+]
 ignore_missing_imports = true
