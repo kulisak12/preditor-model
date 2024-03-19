@@ -1,16 +1,19 @@
-from typing import Iterable, List, Set
+from typing import Iterable, List, Optional, Set
 
 from prediktor import nlp
 from prediktor.config import Config
 from prediktor.model.model import Model
 
-PROMPT = "Write a sentence such that it ends with:"
+PROMPT_EN = "Write a sentence such that it ends with:"
+PROMPT_CS = "Napiš větu tak, aby končila na:"
 
 
-def infill_between(model: Model, before_cursor: str, after_cursor: str) -> str:
+def infill_between(
+    model: Model, before_cursor: str, after_cursor: str, prompt: Optional[str]
+) -> str:
     """Generate an infill between the given strings."""
-    prompt = _format_infill_prompt(before_cursor, after_cursor)
-    decoded = _beam_search(model, prompt)
+    input = _format_input(before_cursor, after_cursor, prompt)
+    decoded = _beam_search(model, input)
     variants = list(_expand_prefixes(decoded))
     final = [
         _format_final_sentence(before_cursor, variant, after_cursor)
@@ -21,9 +24,11 @@ def infill_between(model: Model, before_cursor: str, after_cursor: str) -> str:
     return variants[argmin]
 
 
-def _format_infill_prompt(before: str, after: str) -> str:
-    """Create the prompt for the infill generation."""
-    return f"{PROMPT} {after}\n{before}"
+def _format_input(before: str, after: str, prompt: Optional[str]) -> str:
+    """Create the input for the infill generation."""
+    if prompt is None:
+        return before
+    return prompt + " " + after + "\n" + before
 
 
 def _format_final_sentence(before: str, infill: str, after: str) -> str:
