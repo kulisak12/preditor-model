@@ -54,10 +54,10 @@ def _beam_search(
     model: Model,
     input_text: str,
 ) -> List[str]:
-    input_ids = model.tokenizer.encode(input_text, return_tensors="pt").to(model.device)
+    input_ids = model.tokenizer.encode(input_text + " ", return_tensors="pt").to(model.device)
     gen_ids = model.model.generate(
         input_ids,
-        max_new_tokens=Config.max_length,
+        max_new_tokens=Config.max_infill_length,
         num_return_sequences=Config.num_beams,
         num_beams=Config.num_beams,
         num_beam_groups=(Config.num_beams + 1) // 2,
