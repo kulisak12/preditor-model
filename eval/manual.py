@@ -1,7 +1,7 @@
 import torch
 
-from prediktor import model
 from prediktor.config import Config
+from prediktor.server import model
 
 
 def choose_continuation_manually(input_text: str) -> None:
