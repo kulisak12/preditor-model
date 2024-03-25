@@ -22,10 +22,15 @@ bad_words.extend("_" * i for i in range(2, 10))
 
 def infill_between(model: Model, before_cursor: str, after_cursor: str) -> str:
     """Generate an infill between the given strings."""
+    has_trailing_space = before_cursor and before_cursor[-1].isspace()
+    before_cursor = before_cursor.rstrip()
+    after_cursor = after_cursor.lstrip()
     prompt = format_infill_prompt(before_cursor, after_cursor)
     decoded = beam_search(model, prompt, bad_words, after_cursor)
     outputs = [extract_output(text, before_cursor) for text in decoded]
     best_output = get_best_output(outputs, after_cursor).rstrip()
+    if has_trailing_space:
+        best_output = best_output.lstrip()
     return best_output
 
 

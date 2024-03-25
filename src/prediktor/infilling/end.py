@@ -12,6 +12,9 @@ def infill_between(
     model: Model, before_cursor: str, after_cursor: str, prompt: Optional[str]
 ) -> str:
     """Generate an infill between the given strings."""
+    has_trailing_space = before_cursor and before_cursor[-1].isspace()
+    before_cursor = before_cursor.rstrip()
+    after_cursor = after_cursor.lstrip()
     input = _format_input(before_cursor, after_cursor, prompt)
     decoded = _beam_search(model, input)
     variants = list(_expand_prefixes(decoded))

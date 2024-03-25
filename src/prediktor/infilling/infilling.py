@@ -13,9 +13,7 @@ def infill(model: Model, text: str, cursor_pos: int) -> str:
 
 def _infill(model: Model, func: InfillFunc, text: str, cursor_pos: int) -> str:
     """Generate an infill at the given position using the given function."""
-    before_cursor = text[:cursor_pos].rstrip()
-    after_cursor = text[cursor_pos:].lstrip()
+    before_cursor = text[:cursor_pos]
+    after_cursor = text[cursor_pos:]
     output = func(model, before_cursor, after_cursor)
-    if len(before_cursor) < cursor_pos:
-        output = output.lstrip()
     return output
