@@ -1,8 +1,8 @@
 import re
 from typing import Callable
 
-from prediktor.model.model import Model
-from prediktor.prediction import confidence
+from preditor.model.model import Model
+from preditor.prediction import confidence
 
 TERMINATORS = ".!?:;"
 PredictFunc = Callable[[Model, str], str]

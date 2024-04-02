@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, PreTrainedModel, PreTrainedTokenizer
 
-from prediktor.model.model import Model
+from preditor.model.model import Model
 
 
 class HFModel(Model):

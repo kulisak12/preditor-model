@@ -3,7 +3,7 @@ from typing import List, Optional, Set
 
 from ufal import morphodita
 
-from prediktor.config import Config
+from preditor.config import Config
 
 tagger = morphodita.Tagger.load(Config.dict_path)
 if not tagger:

@@ -1,4 +1,4 @@
-from prediktor.model.model import Model
+from preditor.model.model import Model
 
 
 def generate(model: Model, input_text: str) -> str:

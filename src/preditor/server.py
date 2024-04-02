@@ -2,10 +2,10 @@ from typing import Any
 
 import flask
 
-from prediktor.config import Config
-from prediktor.infilling import infilling
-from prediktor.model.hf import HFModel
-from prediktor.prediction import prediction
+from preditor.config import Config
+from preditor.infilling import infilling
+from preditor.model.hf import HFModel
+from preditor.prediction import prediction
 
 app = flask.Flask(__name__)
 model = HFModel(Config.model_path, Config.max_length)

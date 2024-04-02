@@ -1,10 +1,10 @@
 import heapq
 from typing import Iterable, List
 
-from prediktor import nlp
-from prediktor.model.model import Model
-from prediktor.replacement.search import ScoreKey, SearchNode, nlp_key
-from prediktor.replacement.variants import ReplacementVariantsGenerator
+from preditor import nlp
+from preditor.model.model import Model
+from preditor.replacement.search import ScoreKey, SearchNode, nlp_key
+from preditor.replacement.variants import ReplacementVariantsGenerator
 
 
 def replace(

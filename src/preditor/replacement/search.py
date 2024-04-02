@@ -1,7 +1,7 @@
 import dataclasses
 from typing import Callable, Optional
 
-from prediktor import caching
+from preditor import caching
 
 
 @dataclasses.dataclass(frozen=True)

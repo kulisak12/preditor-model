@@ -4,8 +4,8 @@ import dataclasses
 import sys
 from typing import Dict, List, TextIO
 
-from prediktor.infilling import blank, end, infilling
-from prediktor.server import model
+from preditor.infilling import blank, end, infilling
+from preditor.server import model
 
 
 @dataclasses.dataclass(frozen=True)

@@ -1,6 +1,6 @@
-# Prediktor model
+# Preditor model
 
-A model used by [Prediktor](https://github.com/kulisak12/prediktor).
+A model used by [Preditor](https://github.com/kulisak12/preditor).
 
 Provides completions while typing, even in the middle of a sentence.
 Uses existing large language models without any additional fine-tuning.
@@ -9,7 +9,7 @@ Uses existing large language models without any additional fine-tuning.
 
 ```bash
 pip install -e .
-flask --app prediktor.server run -p 3000
+flask --app preditor.server run -p 3000
 ```
 
 If your device does not have a GPU, you need to
@@ -20,10 +20,10 @@ If your device does not have a GPU, you need to
 The model can be configured using environment variables.
 The recommended way is to use a `.env` file in the root directory of the project.
 
-- `PREDIKTOR_MODEL_PATH`: Path to the model, either local or on HuggingFace.
-- `PREDIKTOR_MAX_LENGTH`: The number of new tokens to generate.
+- `PREDITOR_MODEL_PATH`: Path to the model, either local or on HuggingFace.
+- `PREDITOR_MAX_LENGTH`: The number of new tokens to generate.
 
-Other options can be found in the [configuration provider](src/prediktor/config.py).
+Other options can be found in the [configuration provider](src/preditor/config.py).
 
 ## Requests
 

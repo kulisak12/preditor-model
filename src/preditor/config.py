@@ -15,10 +15,10 @@ class Config:
 
 
 dotenv.load_dotenv()
-# load config from environment variables PREDIKTOR_MODEL_DIR, etc.
+# load config from environment variables PREDITOR_MODEL_DIR, etc.
 for field in Config.__dict__:
     if not field.startswith("__"):
-        env_var_name = "PREDIKTOR_" + field.upper()
+        env_var_name = "PREDITOR_" + field.upper()
         if env_var_name in os.environ:
             field_type = type(getattr(Config, field))
             env_var_value = os.environ[env_var_name]

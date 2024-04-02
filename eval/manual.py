@@ -1,12 +1,12 @@
 import torch
 
-from prediktor.config import Config
-from prediktor.server import model
+from preditor.config import Config
+from preditor.server import model
 
 
 def choose_continuation_manually(input_text: str) -> None:
     """Generate continuation, prompting the user to choose the next token."""
-    # based on prediktor.model.model.generate
+    # based on preditor.model.model.generate
     input_ids = model.tokenizer.encode(input_text, return_tensors="pt")[0]
 
     with torch.no_grad():

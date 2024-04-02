@@ -1,7 +1,7 @@
 from typing import Any, Iterable, List
 
-from prediktor.config import Config
-from prediktor.model.model import Model
+from preditor.config import Config
+from preditor.model.model import Model
 
 PROMPT = """\
 ### Instruction:

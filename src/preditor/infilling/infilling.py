@@ -1,7 +1,7 @@
 from typing import Callable
 
-from prediktor.infilling import blank, end
-from prediktor.model.model import Model
+from preditor.infilling import blank, end
+from preditor.model.model import Model
 
 InfillFunc = Callable[[Model, str, str], str]
 

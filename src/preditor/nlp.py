@@ -2,8 +2,8 @@ from typing import List, Optional, Tuple
 
 import torch
 
-from prediktor import caching
-from prediktor.model.model import Model
+from preditor import caching
+from preditor.model.model import Model
 
 
 def infer_nlp_single(model: Model, text: str) -> float:

@@ -4,9 +4,9 @@ from typing import Iterable, List, Optional, Set
 import torch
 from transformers import LogitsProcessor, LogitsProcessorList, PreTrainedTokenizer
 
-from prediktor import nlp
-from prediktor.config import Config
-from prediktor.model.model import Model
+from preditor import nlp
+from preditor.config import Config
+from preditor.model.model import Model
 
 
 class FirstTokenLogitsProcessor(LogitsProcessor):

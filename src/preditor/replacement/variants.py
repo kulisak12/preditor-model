@@ -1,6 +1,6 @@
 from typing import List, Set, Tuple
 
-from prediktor import tags
+from preditor import tags
 
 
 class ReplacementVariantsGenerator:
