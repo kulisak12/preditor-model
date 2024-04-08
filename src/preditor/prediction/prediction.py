@@ -1,6 +1,7 @@
 import re
 from typing import Callable
 
+from preditor.config import Config
 from preditor.model.model import Model
 from preditor.prediction import confidence
 
@@ -10,7 +11,8 @@ PredictFunc = Callable[[Model, str], str]
 
 def predict(model: Model, text: str) -> str:
     """Generate continuation for the given text."""
-    return _predict(model, confidence.generate, text)
+    func = lambda model, text: confidence.generate(model, text, Config.max_length, Config.confidence)
+    return _predict(model, func, text)
 
 
 def _predict(model: Model, func: PredictFunc, text: str) -> str:
