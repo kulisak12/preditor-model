@@ -22,7 +22,7 @@ def infer_nlp(model: Model, texts: List[str]) -> List[float]:
     with torch.no_grad():
         logits_batch = model.model(trimmed_batch).logits
     return [
-        _nlp_from_logits(input_ids, logits)
+        _get_nlp_of_input(input_ids, logits)
         for input_ids, logits in zip(input_ids_batch, logits_batch)
     ]
 
@@ -42,7 +42,7 @@ def infer_nlp_with_cache(
     logits_batch, caches = _get_outputs_with_cache(model, trimmed_batch, in_caches)
     starts = [caching.cache_len(cache) for cache in in_caches]
     nlps = [
-        _nlp_from_logits(input_ids[start:], logits)
+        _get_nlp_of_input(input_ids[start:], logits)
         for input_ids, logits, start in zip(input_ids_batch, logits_batch, starts)
     ]
     out_caches = [
@@ -50,6 +50,18 @@ def infer_nlp_with_cache(
         for input_ids, cache in zip(input_ids_batch, caches)
     ]
     return nlps, out_caches
+
+
+def infer_nlps_from_logits(
+    text_ids: torch.Tensor, logits: torch.Tensor
+) -> torch.Tensor:
+    """Calculate the negative log probability for each token in the text.
+
+    The i-th logits predict the i-th token.
+    """
+    softmax = torch.softmax(logits, dim=-1)
+    probs = softmax[torch.arange(len(text_ids)), text_ids]
+    return -torch.log(probs)
 
 
 def _encode_with_eos(model: Model, text: str) -> torch.Tensor:
@@ -69,16 +81,16 @@ def _trim_and_pad(input_ids: List[torch.Tensor]) -> torch.Tensor:
     return torch.nn.utils.rnn.pad_sequence(trimmed, batch_first=True)
 
 
-def _nlp_from_logits(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
+def _get_nlp_of_input(input_ids: torch.Tensor, logits: torch.Tensor) -> float:
     """Calculate the nlp for one item in batch.
 
+    The i-th logits are derived from the i-th token.
     The logits tensor does not need to be trimmed to match the input_ids.
     """
     # prediction for a token is in the previous position
     text_ids = input_ids[1:]
-    softmax = torch.softmax(logits, dim=-1)
-    probs = softmax[torch.arange(len(text_ids)), text_ids]
-    return -torch.log(probs).sum().item()
+    nlps = infer_nlps_from_logits(text_ids, logits)
+    return nlps.sum().item()
 
 
 def _get_outputs_with_cache(
