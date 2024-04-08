@@ -8,7 +8,7 @@ from preditor.model.hf import HFModel
 from preditor.prediction import prediction
 
 app = flask.Flask(__name__)
-model = HFModel(Config.model_path, Config.max_length)
+model = HFModel(Config.model_path)
 
 
 @app.route("/status/")

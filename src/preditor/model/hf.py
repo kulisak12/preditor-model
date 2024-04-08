@@ -5,7 +5,7 @@ from preditor.model.model import Model
 
 
 class HFModel(Model):
-    def __init__(self, model_path: str, max_new_tokens: int):
+    def __init__(self, model_path: str):
         self._tokenizer = AutoTokenizer.from_pretrained(model_path)
         self._prefix_space_tokenizer = AutoTokenizer.from_pretrained(
             model_path,
@@ -17,7 +17,6 @@ class HFModel(Model):
             torch_dtype=torch.bfloat16
         )
         self._config = GenerationConfig(
-            max_new_tokens=max_new_tokens,
             pad_token_id=self._tokenizer.eos_token_id
         )
 
