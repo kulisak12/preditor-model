@@ -9,5 +9,6 @@ def generate(model: Model, input_text: str, max_length: int) -> str:
         generation_config=model.config,
         max_new_tokens=max_length,
     )
-    decoded_text = model.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    gen_ids = output_ids[0][len(input_ids[0]):]
+    decoded_text = model.tokenizer.decode(gen_ids, skip_special_tokens=True)
     return decoded_text
