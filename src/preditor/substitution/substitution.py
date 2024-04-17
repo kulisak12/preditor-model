@@ -1,6 +1,6 @@
 from preditor.model.model import Model
-from preditor.replacement import dijkstra
-from preditor.replacement.variants import ReplacementVariantsGenerator
+from preditor.substitution import dijkstra
+from preditor.substitution.variants import ReplacementVariantsGenerator
 
 
 def replace(

@@ -3,8 +3,8 @@ from typing import Iterable, List
 
 from preditor import nlp
 from preditor.model.model import Model
-from preditor.replacement.search import ScoreKey, SearchNode, nlp_key
-from preditor.replacement.variants import ReplacementVariantsGenerator
+from preditor.substitution.search import ScoreKey, SearchNode, nlp_key
+from preditor.substitution.variants import ReplacementVariantsGenerator
 
 
 def replace(
