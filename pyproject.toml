@@ -26,6 +26,7 @@ dependencies = [
 ]
 
 [tool.mypy]
+plugins = "pydantic.mypy"
 strict = false
 
 [[tool.mypy.overrides]]
