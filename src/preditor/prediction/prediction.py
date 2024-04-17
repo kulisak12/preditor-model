@@ -1,26 +1,34 @@
 import re
 from typing import Callable
 
-from preditor.config import Config
+import pydantic
+
 from preditor.model.model import Model
 from preditor.prediction import confidence
 
 TERMINATORS = ".!?:;"
-PredictFunc = Callable[[Model, str], str]
+PredictFunc = Callable[[str], str]
 
 
-def predict(model: Model, text: str) -> str:
+class PredictionConfig(pydantic.BaseModel):
+    max_length: int = pydantic.Field(30, ge=1, le=50)
+    confidence: float = pydantic.Field(5.0, ge=1.0, le=10.0)
+
+
+def predict(model: Model, text: str, config: PredictionConfig) -> str:
     """Generate continuation for the given text."""
-    func = lambda model, text: confidence.generate(model, text, Config.max_length, Config.confidence)
-    return _predict(model, func, text)
+    def func(text: str): return confidence.generate(
+        model, text, config.max_length, config.confidence
+    )
+    return _predict(func, text)
 
 
-def _predict(model: Model, func: PredictFunc, text: str) -> str:
+def _predict(func: PredictFunc, text: str) -> str:
     """Generate continuation for the given text using the given function."""
     # the model doesn't like whitespace at the after
     trimmed_text = text.rstrip()
     stripped_suffix = text[len(trimmed_text):]
-    prediction = func(model, trimmed_text)
+    prediction = func(trimmed_text)
     if stripped_suffix:
         prediction = prediction.lstrip()
 

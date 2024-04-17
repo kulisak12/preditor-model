@@ -15,7 +15,7 @@ class FirstTokenLogitsProcessor(LogitsProcessor):
         self.prompt_length_to_skip = prompt_length_to_skip
         self.token_ids = token_ids
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.Tensor) -> torch.Tensor:
         # if it's the first token to be generated
         if input_ids.shape[-1] - self.prompt_length_to_skip == 0:
             # set the scores of all tokens that are not in the list to -inf
@@ -30,14 +30,18 @@ PROMPT_CS = "Napiš větu tak, aby končila na:"
 
 
 def generate_infills(
-    model: Model, before_cursor: str, after_cursor: str, prompt: Optional[str]
+    model: Model, before_cursor: str, after_cursor: str, prompt: Optional[str],
+    max_length: int, num_variants: int
 ) -> List[str]:
     """Generate possible infills between the given strings."""
     had_trailing_space = bool(before_cursor) and before_cursor[-1].isspace()
     before_cursor = before_cursor.rstrip()
     after_cursor = after_cursor.lstrip()
     input_text = _format_input(before_cursor, after_cursor, prompt)
-    decoded = _beam_search(model, input_text, had_trailing_space)
+    decoded = _beam_search(
+        model, input_text, had_trailing_space,
+        max_length, num_variants
+    )
     return decoded
 
 
@@ -52,6 +56,8 @@ def _beam_search(
     model: Model,
     input_text: str,
     should_start_with_space: bool,
+    max_length: int,
+    num_variants: int
 ) -> List[str]:
     """Generate continuations using beam search."""
     input_ids = model.tokenizer.encode(input_text, return_tensors="pt").to(model.device)
@@ -62,10 +68,10 @@ def _beam_search(
     gen_ids = model.model.generate(
         input_ids,
         logits_processor=processor_list if should_start_with_space else None,
-        max_new_tokens=Config.max_infill_length,
-        num_return_sequences=Config.num_beams,
-        num_beams=Config.num_beams,
-        num_beam_groups=(Config.num_beams + 1) // 2,
+        max_new_tokens=max_length,
+        num_return_sequences=num_variants,
+        num_beams=num_variants,
+        num_beam_groups=(num_variants + 1) // 2,
         diversity_penalty=20.0,
         pad_token_id=model.tokenizer.eos_token_id
     )

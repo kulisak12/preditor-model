@@ -6,16 +6,10 @@ import dotenv
 class Config:
     dict_path: str = ""
     model_path: str = ""
-    max_length: int = 30
-    max_infill_length: int = 8
-    top_k: int = 10
-    temperature: float = 0.7
-    confidence: float = 2.5
-    num_beams: int = 10
 
 
 dotenv.load_dotenv()
-# load config from environment variables PREDITOR_MODEL_DIR, etc.
+# load config from environment variables PREDITOR_MODEL_PATH, etc.
 for field in Config.__dict__:
     if not field.startswith("__"):
         env_var_name = "PREDITOR_" + field.upper()
