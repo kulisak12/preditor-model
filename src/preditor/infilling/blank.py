@@ -20,18 +20,20 @@ bad_words.extend(" " * i for i in range(2, 10))
 bad_words.extend("_" * i for i in range(2, 10))
 
 
-def infill_between(model: Model, before_cursor: str, after_cursor: str) -> str:
-    """Generate an infill between the given strings."""
-    has_trailing_space = before_cursor and before_cursor[-1].isspace()
+def generate_infills(
+    model: Model, before_cursor: str, after_cursor: str
+) -> List[str]:
+    """Generate possible infills between the given strings."""
+    had_trailing_space = bool(before_cursor) and before_cursor[-1].isspace()
     before_cursor = before_cursor.rstrip()
     after_cursor = after_cursor.lstrip()
     prompt = format_infill_prompt(before_cursor, after_cursor)
     decoded = beam_search(model, prompt, bad_words, after_cursor)
     outputs = [extract_output(text, before_cursor) for text in decoded]
-    best_output = get_best_output(outputs, after_cursor).rstrip()
-    if has_trailing_space:
-        best_output = best_output.lstrip()
-    return best_output
+    outputs = [output.rstrip() for output in outputs]
+    if had_trailing_space:
+        outputs = [output.lstrip() for output in outputs]
+    return outputs
 
 
 def format_infill_prompt(before: str, after: str) -> str:
@@ -47,30 +49,6 @@ def extract_output(text: str, before_cursor: str) -> str:
     start = "### Output:\n" + before_cursor
     filled = text[text.find(start) + len(start):]
     return filled[:filled.find("\n")]
-
-
-def get_best_output(outputs: List[str], after: str) -> str:
-    """Return the output that best matches the text after cursor.
-
-    Favor outputs in the beginning of the list.
-    """
-    # exact match
-    for output in outputs:
-        if output.endswith(after):
-            return output[:len(output) - len(after)]
-    # partial match
-    end_first_word = after.split()[0]
-    for output in outputs:
-        pos = output.find(end_first_word)
-        if pos != -1:
-            return output[:pos]
-    # no match
-    for output in outputs:
-        splits = output.split()
-        if len(splits) > 1:
-            return splits[0]
-    # no output
-    return ""
 
 
 def beam_search(

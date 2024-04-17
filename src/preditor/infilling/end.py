@@ -1,10 +1,9 @@
 import functools
-from typing import Iterable, List, Optional, Set
+from typing import List, Optional
 
 import torch
 from transformers import LogitsProcessor, LogitsProcessorList, PreTrainedTokenizer
 
-from preditor import nlp
 from preditor.config import Config
 from preditor.model.model import Model
 
@@ -30,23 +29,16 @@ PROMPT_EN = "Write a sentence such that it ends with:"
 PROMPT_CS = "Napiš větu tak, aby končila na:"
 
 
-def infill_between(
+def generate_infills(
     model: Model, before_cursor: str, after_cursor: str, prompt: Optional[str]
-) -> str:
-    """Generate an infill between the given strings."""
-    has_trailing_space = bool(before_cursor) and before_cursor[-1].isspace()
+) -> List[str]:
+    """Generate possible infills between the given strings."""
+    had_trailing_space = bool(before_cursor) and before_cursor[-1].isspace()
     before_cursor = before_cursor.rstrip()
     after_cursor = after_cursor.lstrip()
     input_text = _format_input(before_cursor, after_cursor, prompt)
-    decoded = _beam_search(model, input_text, has_trailing_space)
-    variants = list(_expand_prefixes(decoded))
-    final = [
-        _format_final_sentence(before_cursor, variant, after_cursor)
-        for variant in variants
-    ]
-    nlps = nlp.infer_nlp(model, final)
-    argmin = min(range(len(nlps)), key=nlps.__getitem__)
-    return variants[argmin]
+    decoded = _beam_search(model, input_text, had_trailing_space)
+    return decoded
 
 
 def _format_input(before: str, after: str, prompt: Optional[str]) -> str:
@@ -56,30 +48,12 @@ def _format_input(before: str, after: str, prompt: Optional[str]) -> str:
     return prompt + " " + after + "\n" + before
 
 
-def _format_final_sentence(before: str, infill: str, after: str) -> str:
-    """Create the final sentence from the infill and the context."""
-    return before + infill + " " + after
-
-
-def _expand_prefixes(infill_texts: Iterable[str]) -> Set[str]:
-    """Generate all prefixes of the generated texts.
-
-    The prefix always ends with a word boundary.
-    The last word is not included since it is not certain that it is complete.
-    """
-    result: Set[str] = set()
-    for text in infill_texts:
-        words = text.split()
-        for i in range(1, len(words)):
-            result.add(" ".join(words[:i]))
-    return result
-
-
 def _beam_search(
     model: Model,
     input_text: str,
-    has_trailing_space: bool,
+    should_start_with_space: bool,
 ) -> List[str]:
+    """Generate continuations using beam search."""
     input_ids = model.tokenizer.encode(input_text, return_tensors="pt").to(model.device)
     space_tokens = _get_tokens_with_prefix_space(model.tokenizer)
     space_processor = FirstTokenLogitsProcessor(len(input_ids[0]), space_tokens)
@@ -87,7 +61,7 @@ def _beam_search(
 
     gen_ids = model.model.generate(
         input_ids,
-        logits_processor=processor_list if has_trailing_space else None,
+        logits_processor=processor_list if should_start_with_space else None,
         max_new_tokens=Config.max_infill_length,
         num_return_sequences=Config.num_beams,
         num_beams=Config.num_beams,
