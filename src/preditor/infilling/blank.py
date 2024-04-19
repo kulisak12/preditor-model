@@ -11,12 +11,13 @@ PROMPT = """\
 
 ### Output:
 {}"""
-INFILL_INSTRUCTION = "Fill in the blank marked by [...]"
+INFILL_INSTRUCTION = "Fill in the blank marked by ___"
 
-bad_words = ["[...]", "[", "...", "[…]", "…"]
-bad_words.extend("#" * i for i in range(1, 5))
-bad_words.extend(" " * i for i in range(2, 10))
-bad_words.extend("_" * i for i in range(2, 10))
+MAX_TOKEN_LENGTH = 80
+bad_words: List[str] = []
+bad_words.extend("#" * i for i in range(1, MAX_TOKEN_LENGTH + 1))
+bad_words.extend("_" * i for i in range(1, MAX_TOKEN_LENGTH + 1))
+bad_words.extend(" " * i for i in range(2, MAX_TOKEN_LENGTH + 1))
 
 
 def generate_infills(
@@ -43,7 +44,7 @@ def format_infill_prompt(before: str, after: str) -> str:
     """Create the prompt for the infill generation."""
     return PROMPT.format(
         INFILL_INSTRUCTION,
-        before + " [...] " + after,
+        before + " ___ " + after,
         before
     )
 
