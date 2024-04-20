@@ -1,9 +1,10 @@
 import abc
-from typing import Any, Dict, Type
+from typing import Any, Type
 
 import flask
 import pydantic
 
+from preditor import suggestion
 from preditor.config import Config
 from preditor.infilling import infilling
 from preditor.model.hf import HFModel
@@ -20,21 +21,17 @@ class PreditorRequest(pydantic.BaseModel, abc.ABC):
         pass
 
 
-class InfillingRequest(PreditorRequest):
-    text: str
-    cursor: int
-    config: infilling.InfillingConfig = infilling.InfillingConfig()
+class SuggestionRequest(PreditorRequest):
+    before_cursor: str
+    after_cursor: str
+    prediction_config: prediction.PredictionConfig = prediction.PredictionConfig()
+    infilling_config: infilling.InfillingConfig = infilling.InfillingConfig()
 
     def handle(self) -> str:
-        return infilling.infill(model, self.text, self.cursor, self.config)
-
-
-class PredictionRequest(PreditorRequest):
-    text: str
-    config: prediction.PredictionConfig = prediction.PredictionConfig()
-
-    def handle(self) -> str:
-        return prediction.predict(model, self.text, self.config)
+        return suggestion.suggest(
+            model, self.before_cursor, self.after_cursor,
+            self.prediction_config, self.infilling_config
+        )
 
 
 class SubstitutionRequest(PreditorRequest):
@@ -57,16 +54,10 @@ def get_status() -> str:
     return "<h1>Preditor</h1>"
 
 
-@app.route("/infill/", methods=["POST"])
-def infill() -> flask.Response:
-    request: Any = flask.request.get_json()
-    return _handle_request(request, InfillingRequest)
-
-
-@app.route("/predict/", methods=["POST"])
+@app.route("/suggest/", methods=["POST"])
 def predict() -> flask.Response:
     request: Any = flask.request.get_json()
-    return _handle_request(request, PredictionRequest)
+    return _handle_request(request, SuggestionRequest)
 
 
 @app.route("/substitute/", methods=["POST"])
