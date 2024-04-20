@@ -6,9 +6,9 @@ from preditor.substitution.variants import ReplacementVariantsGenerator
 
 
 class SubstitutionConfig(pydantic.BaseModel):
-    min_variants: int = pydantic.Field(2, ge=2, le=20)
-    relax_count: int = pydantic.Field(8, ge=1, le=20)
-    pool_factor: int = pydantic.Field(1, ge=1, le=10)
+    min_variants: int = pydantic.Field(2, ge=2)
+    relax_count: int = pydantic.Field(8, ge=1)
+    pool_factor: int = pydantic.Field(1, ge=1)
     # no need to select score key, 0.0 yields same behavior as nlp_key
     lp_alpha: float = pydantic.Field(0.0, ge=0.0, le=1.0)
 
