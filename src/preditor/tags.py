@@ -22,9 +22,9 @@ GUESSER = morphodita.Morpho.GUESSER
 
 def tag(text: str) -> List[TaggedForm]:
     """Tag the given text using the loaded tagger."""
-    forms = morphodita.Forms()
-    lemmas = morphodita.TaggedLemmas()
-    tokens = morphodita.TokenRanges()
+    forms = morphodita.Forms()  # type: ignore[abstract]
+    lemmas = morphodita.TaggedLemmas()  # type: ignore[abstract]
+    tokens = morphodita.TokenRanges()  # type: ignore[abstract]
     tokenizer = tagger.newTokenizer()
     if tokenizer is None:
         raise Exception("No tokenizer is defined for the supplied model!")
@@ -61,7 +61,7 @@ def generate_word_variations(original: TaggedForm) -> Set[str]:
         return original_result
     morpho = tagger.getMorpho()
     wildcard = create_tag_wildcard(original.tag)
-    lemmas_forms = morphodita.TaggedLemmasForms()
+    lemmas_forms = morphodita.TaggedLemmasForms()  # type: ignore[abstract]
     morpho.generate(original.lemma, wildcard, GUESSER, lemmas_forms)
     variations = {
         copy_case(form.form, original.form)
