@@ -15,18 +15,17 @@ def suggest(
 
     Choose between prediction and infilling tasks.
     """
-    lines_before = before_cursor.splitlines()
-    lines_after = after_cursor.splitlines()
-    lines_after = _get_first_paragraph(lines_after)
-    if not lines_after:
-        # prediction
-        # converting hard wrapped text to one line
-        return prediction.predict(model, " ".join(lines_before), prediction_config)
-    # infilling
-    lines_before = _get_last_paragraph(lines_before)
-    return infilling.infill(
-        model, " ".join(lines_before), " ".join(lines_after), infilling_config
-    )
+    lines_before = _get_last_paragraph(before_cursor.splitlines())
+    lines_after = _get_first_paragraph(after_cursor.splitlines())
+    # converting hard wrapped text to one line
+    joined_before = " ".join(lines_before)
+    joined_after = " ".join(lines_after)
+    if joined_after:
+        return infilling.infill(
+            model, joined_before, joined_after, infilling_config
+        )
+    else:
+        return prediction.predict(model, joined_before, prediction_config)
 
 
 def _get_first_paragraph(lines: List[str]) -> List[str]:
