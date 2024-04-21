@@ -41,8 +41,10 @@ def select_by_score(
     Return the prefix that yields the best score.
     """
     variants = list(_expand_prefixes(variants))
+    if after_cursor.lstrip() == after_cursor:
+        variants = [variant + " " for variant in variants]
     final = [
-        _format_final_sentence(before_cursor, variant, after_cursor)
+        before_cursor + variant + after_cursor
         for variant in variants
     ]
     nlps = nlp.infer_nlp(model, final)
@@ -62,8 +64,3 @@ def _expand_prefixes(infill_texts: Iterable[str]) -> Set[str]:
         for i in range(1, len(words)):
             result.add(" ".join(words[:i]))
     return result
-
-
-def _format_final_sentence(before: str, infill: str, after: str) -> str:
-    """Create the final sentence from the infill and the context."""
-    return before + infill + " " + after
