@@ -13,23 +13,18 @@ def select_by_match(
 
     Favor variants in the beginning of the list.
     """
-    # exact match
-    for variant in variants:
-        if variant.endswith(after_cursor):
-            return variant[:len(variant) - len(after_cursor)]
-    # partial match
-    end_first_word = after_cursor.split()[0]
-    for variant in variants:
-        pos = variant.find(end_first_word)
-        if pos != -1:
-            return variant[:pos]
+    # try prefixes of after_cursor from longest to shortest
+    for i in range(len(after_cursor), 0, -1):
+        for variant in variants:
+            pos = variant.find(after_cursor[:i])
+            if pos == -1:
+                continue
+            infill = variant[:pos]
+            # avoid empty infills
+            if infill.strip():
+                return infill
     # no match
-    for variant in variants:
-        splits = variant.split()
-        if len(splits) > 1:
-            return splits[0]
-    # no variant
-    return ""
+    return variants[0]
 
 
 def get_number_of_tokens(model: Model, text: str) -> int:
