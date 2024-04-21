@@ -1,3 +1,4 @@
+import re
 from typing import Iterable, List, Set
 
 from preditor import nlp
@@ -69,7 +70,8 @@ def _expand_prefixes(infill_texts: Iterable[str]) -> Set[str]:
     """
     result: Set[str] = set()
     for text in infill_texts:
-        words = text.split()
-        for i in range(1, len(words)):
-            result.add(" ".join(words[:i]))
+        boundaries = [match.end() for match in re.finditer(r'\b', text)]
+        for boundary in boundaries[:-1]:
+            prefix = text[:boundary].rstrip()
+            result.add(prefix)
     return result
