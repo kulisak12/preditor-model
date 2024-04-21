@@ -18,8 +18,11 @@ def infill(
     model: Model, before_cursor: str, after_cursor: str, config: InfillingConfig
 ) -> str:
     """Generate an infill between the two texts."""
+    max_length = config.max_length
+    # if using the select_by_match strategy
+    # max_length += selection.get_number_of_tokens(model, after_cursor)
     variants = blank.generate_infills(
-        model, before_cursor, after_cursor, config.max_length, config.num_variants
+        model, before_cursor, after_cursor, max_length, config.num_variants
     )
     selected = selection.select_by_score(
         variants, model, before_cursor, after_cursor

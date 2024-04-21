@@ -31,6 +31,15 @@ def select_by_match(
     return ""
 
 
+def get_number_of_tokens(model: Model, text: str) -> int:
+    """Get the number of tokens if the text were tokenized.
+
+    It is recommended to increase max_tokens by the number of tokens
+    in the text after cursor if using the select_by_match strategy.
+    """
+    return len(model.tokenizer.encode(text))
+
+
 def select_by_score(
     variants: List[str],
     model: Model, before_cursor: str, after_cursor: str,
