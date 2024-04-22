@@ -15,11 +15,11 @@ class SubstitutionConfig(pydantic.BaseModel):
 
 def replace(
     model: Model,
-    text: str, start: int, length: int, replacement: str,
+    before_old: str, old: str, after_old: str, replacement: str,
     config: SubstitutionConfig,
 ) -> str:
     """Replace part of the text and modify the rest to match."""
-    rvg = ReplacementVariantsGenerator(text, start, length, replacement)
+    rvg = ReplacementVariantsGenerator(before_old, old, after_old, replacement)
     return dijkstra.replace_with_cache(
         model, rvg,
         min_variants=config.min_variants,

@@ -1,27 +1,28 @@
-from typing import List, Set, Tuple
+from typing import Set, Tuple
 
 from preditor import tags
 
 
 class ReplacementVariantsGenerator:
     def __init__(
-        self, text: str,
-        start: int, length: int, replacement: str
+        self, before_old: str, old: str, after_old: str,
+        replacement: str
     ) -> None:
+        text = before_old + old + after_old
         self._tagged_forms = tags.tag(text)
-        self._force_replacement(start, length, replacement)
+        self._force_replacement(len(before_old), old, replacement)
         self._variants = [
             tags.generate_word_variations(form)
             for form in self._tagged_forms
         ]
 
     def _force_replacement(
-        self, start: int, length: int, replacement: str
+        self, start: int, old_word: str, replacement: str
     ) -> None:
         """Force the form of the replaced form."""
         pos = 0
         for i, form in enumerate(self._tagged_forms):
-            if pos == start and len(form.form) == length:
+            if pos == start and form.form == old_word:
                 self._tagged_forms[i] = tags.TaggedForm(
                     lemma=None,
                     tag=None,

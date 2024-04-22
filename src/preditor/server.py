@@ -35,16 +35,16 @@ class SuggestionRequest(PreditorRequest):
 
 
 class SubstitutionRequest(PreditorRequest):
-    text: str
-    start: int
-    length: int
+    before_old: str
+    old: str
+    after_old: str
     replacement: str
     config: substitution.SubstitutionConfig = substitution.SubstitutionConfig()
 
     def handle(self) -> str:
         return substitution.replace(
             model,
-            self.text, self.start, self.length, self.replacement,
+            self.before_old, self.old, self.after_old, self.replacement,
             self.config
         )
 
