@@ -11,7 +11,7 @@ InfillSelectFunc = Callable[[List[str], str, str], str]
 
 class InfillingConfig(pydantic.BaseModel):
     max_length: int = pydantic.Field(8, ge=1)
-    num_variants: int = pydantic.Field(10, ge=1)
+    num_variants: int = pydantic.Field(4, ge=2)
 
 
 def infill(

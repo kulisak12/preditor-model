@@ -11,8 +11,8 @@ PredictFunc = Callable[[str], str]
 
 
 class PredictionConfig(pydantic.BaseModel):
-    max_length: int = pydantic.Field(30, ge=1)
-    confidence: float = pydantic.Field(5.0, ge=1.0, )
+    max_length: int = pydantic.Field(20, ge=1)
+    confidence: float = pydantic.Field(7.0, ge=1.0)
 
 
 def predict(model: Model, text: str, config: PredictionConfig) -> str:

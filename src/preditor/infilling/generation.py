@@ -43,9 +43,9 @@ def beam_search(
         logits_processor=processor_list if should_start_with_space else None,
         bad_words_ids=_get_bad_tokens(model, bad_words) if bad_words else None,
         max_new_tokens=max_length,
-        num_return_sequences=num_variants,
-        num_beams=num_variants,
-        num_beam_groups=(num_variants + 1) // 2,
+        num_return_sequences=num_variants * 2,
+        num_beams=num_variants * 2,
+        num_beam_groups=num_variants,
         diversity_penalty=20.0,
         pad_token_id=model.tokenizer.eos_token_id
     )
