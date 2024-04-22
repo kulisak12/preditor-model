@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List, Optional, Set
+from typing import Iterator, List, Optional, Set, Tuple
 
 from ufal import morphodita
 
@@ -22,17 +22,10 @@ GUESSER = morphodita.Morpho.GUESSER
 
 def tag(text: str) -> List[TaggedForm]:
     """Tag the given text using the loaded tagger."""
-    forms = morphodita.Forms()  # type: ignore[abstract]
     lemmas = morphodita.TaggedLemmas()  # type: ignore[abstract]
-    tokens = morphodita.TokenRanges()  # type: ignore[abstract]
-    tokenizer = tagger.newTokenizer()
-    if tokenizer is None:
-        raise Exception("No tokenizer is defined for the supplied model!")
-
     result: List[TaggedForm] = []
-    tokenizer.setText(text)
     text_pos = 0
-    while tokenizer.nextSentence(forms, tokens):
+    for forms, tokens in tokenize(text):
         tagger.tag(forms, lemmas, GUESSER)
         for lemma, token in zip(lemmas, tokens):
             if token.start != text_pos:
@@ -48,6 +41,43 @@ def tag(text: str) -> List[TaggedForm]:
             ))
             text_pos = token.start + token.length
     return result
+
+
+def split_sentences(text: str) -> List[str]:
+    """Split the text into sentences.
+
+    Return a list of sentences and text parts between them.
+    """
+    result: List[str] = []
+    text_pos = 0
+    for forms, tokens in tokenize(text):
+        if len(tokens) == 0:
+            continue
+        sentence_start = tokens[0].start
+        sentence_end = tokens[-1].start + tokens[-1].length
+        between_sentences = text[text_pos:sentence_start]
+        sentence = text[sentence_start:sentence_end]
+        text_pos = sentence_end
+        if between_sentences:
+            result.append(between_sentences)
+        result.append(sentence)
+    return result
+
+
+def tokenize(text: str) -> Iterator[Tuple[morphodita.Forms, morphodita.TokenRanges]]:
+    """Tokenize the text.
+
+    Generate sentences, each represented by a pair of forms and tokens.
+    """
+    forms = morphodita.Forms()  # type: ignore[abstract]
+    tokens = morphodita.TokenRanges()  # type: ignore[abstract]
+    tokenizer = tagger.newTokenizer()
+    if tokenizer is None:
+        raise Exception("No tokenizer is defined for the supplied model!")
+
+    tokenizer.setText(text)
+    while tokenizer.nextSentence(forms, tokens):
+        yield (forms, tokens)
 
 
 def generate_word_variations(original: TaggedForm) -> Set[str]:
