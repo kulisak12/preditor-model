@@ -7,17 +7,18 @@ authors = [
     { name = "David Klement" },
 ]
 name = "preditor-model"
-version = "0.1"
-description = "Service providing text predictions"
+version = "1.0"
+description = "Service providing text predictions and sentence substitutions"
 readme = "README.md"
 requires-python = ">=3.8"
-keywords = ["prediction", "infilling", "nlp", "gpt"]
+keywords = ["substitution", "prediction", "infilling", "nlp"]
 classifiers = [
     "Programming Language :: Python :: 3.8",
 ]
 dependencies = [
     "accelerate",
     "flask",
+    "gunicorn",
     "pydantic",
     "python-dotenv",
     "torch",
