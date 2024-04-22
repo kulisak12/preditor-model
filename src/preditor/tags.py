@@ -5,9 +5,9 @@ from ufal import morphodita
 
 from preditor.config import Config
 
-tagger = morphodita.Tagger.load(Config.dict_path)
+tagger = morphodita.Tagger.load(Config.tagger_path)
 if not tagger:
-    raise Exception(f"Cannot load tagger from file '{Config.dict_path}'.")
+    raise Exception(f"Cannot load tagger from file '{Config.tagger_path}'.")
 
 
 @dataclasses.dataclass(frozen=True)

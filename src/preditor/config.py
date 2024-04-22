@@ -4,7 +4,7 @@ import dotenv
 
 
 class Config:
-    dict_path: str = ""
+    tagger_path: str = ""
     model_path: str = ""
 
 
