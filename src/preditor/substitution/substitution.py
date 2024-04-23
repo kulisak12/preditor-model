@@ -32,7 +32,7 @@ def replace(
         model,
         before_old[len(previous_sentences):],
         old,
-        after_old[:-len(next_sentences)],
+        after_old[:len(after_old)-len(next_sentences)],
         replacement,
         config,
     )
