@@ -21,7 +21,7 @@ def infill(
     max_length = config.max_length
     # if using the select_by_match strategy
     # max_length += selection.get_number_of_tokens(model, after_cursor)
-    variants = blank.generate_infills(
+    variants = end.generate_infills(
         model, before_cursor, after_cursor, max_length, config.num_variants
     )
     selected = selection.select_by_score(
