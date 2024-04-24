@@ -5,12 +5,10 @@ import torch
 
 from preditor import nlp
 from preditor.model.model import Model
+from preditor.prediction.config import PredictionConfig
 
 
-def generate(
-    model: Model, input_text: str,
-    max_length: int, confidence: float
-) -> str:
+def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     """Generate a continuation of the input text.
 
     Trim the generated text to only include the tokens
@@ -21,14 +19,14 @@ def generate(
     output = model.model.generate(
         input_ids,
         generation_config=model.config,
-        max_new_tokens=max_length,
+        max_new_tokens=config.max_length,
         output_scores=True,
         return_dict_in_generate=True,
     )
     gen_ids = output.sequences[0][len(input_ids[0]):]
     logits = torch.stack(output.scores).squeeze(1).to(torch.float64)
     nlps = nlp.infer_nlps_from_logits(gen_ids, logits).tolist()
-    expected = _calculate_expected_usefulness(nlps, confidence)
+    expected = _calculate_expected_usefulness(nlps, config.confidence)
     best = max(range(len(expected)), key=expected.__getitem__)
     output_ids = gen_ids[:best]
     decoded_text = model.tokenizer.decode(output_ids, skip_special_tokens=True)

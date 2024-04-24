@@ -1,30 +1,23 @@
 from typing import Callable, List
 
-import pydantic
-
 from preditor.infilling import blank, end, selection
+from preditor.infilling.config import InfillingConfig
 from preditor.model.model import Model
 
-InfillGenerateFunc = Callable[[str, str], List[str]]
-InfillSelectFunc = Callable[[List[str], str, str], str]
-
-
-class InfillingConfig(pydantic.BaseModel):
-    max_length: int = pydantic.Field(8, ge=1)
-    num_variants: int = pydantic.Field(4, ge=2)
+GenerateFunc = Callable[[Model, str, str, InfillingConfig, str], List[str]]
+SelectFunc = Callable[[List[str], Model, str, str], str]
 
 
 def infill(
-    model: Model, before_cursor: str, after_cursor: str, config: InfillingConfig
+    model: Model, before_cursor: str, after_cursor: str, config: InfillingConfig,
+    generate_func: GenerateFunc = end.generate_infills,
+    select_func: SelectFunc = selection.select_by_score
 ) -> str:
     """Generate an infill between the two texts."""
-    max_length = config.max_length
-    # if using the select_by_match strategy
-    # max_length += selection.get_number_of_tokens(model, after_cursor)
-    variants = end.generate_infills(
-        model, before_cursor, after_cursor, max_length, config.num_variants
+    variants = generate_func(
+        model, before_cursor, after_cursor, config, "en"
     )
-    selected = selection.select_by_score(
+    selected = select_func(
         variants, model, before_cursor, after_cursor
     )
     return selected

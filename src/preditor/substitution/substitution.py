@@ -1,26 +1,20 @@
 import itertools
-from typing import Tuple
-
-import pydantic
+from typing import Callable, Tuple
 
 from preditor import tags
 from preditor.model.model import Model
-from preditor.substitution import dijkstra, search
+from preditor.substitution import dijkstra
+from preditor.substitution.config import SubstitutionConfig
 from preditor.substitution.variants import ReplacementVariantsGenerator
 
-
-class SubstitutionConfig(pydantic.BaseModel):
-    min_variants: int = pydantic.Field(2, ge=2)
-    relax_count: int = pydantic.Field(8, ge=1)
-    pool_factor: int = pydantic.Field(5, ge=1)
-    # no need to select score key, 0.0 yields same behavior as nlp_key
-    lp_alpha: float = pydantic.Field(0.0, ge=0.0, le=1.0)
+SubstituteFunc = Callable[[Model, ReplacementVariantsGenerator, SubstitutionConfig], str]
 
 
 def replace(
     model: Model,
     before_old: str, old: str, after_old: str, replacement: str,
     config: SubstitutionConfig,
+    func: SubstituteFunc = dijkstra.replace_with_cache,
 ) -> str:
     """Replace part of the sentence containing the old part with the replacement
     and modify the rest of the sentence to match.
@@ -35,6 +29,7 @@ def replace(
         after_old[:len(after_old)-len(next_sentences)],
         replacement,
         config,
+        func,
     )
     return previous_sentences + replaced_sentence + next_sentences
 
@@ -64,13 +59,8 @@ def _replace_one_sentence(
     model: Model,
     before_old: str, old: str, after_old: str, replacement: str,
     config: SubstitutionConfig,
+    func: SubstituteFunc = dijkstra.replace_with_cache,
 ) -> str:
     """Replace part of the sentence and modify the rest to match."""
     rvg = ReplacementVariantsGenerator(before_old, old, after_old, replacement)
-    return dijkstra.replace_with_cache(
-        model, rvg,
-        min_variants=config.min_variants,
-        relax_count=config.relax_count,
-        pool_size=config.relax_count * config.pool_factor,
-        score_key=lambda x: search.lp_key(x, config.lp_alpha),
-    )
+    return func(model, rvg, config)

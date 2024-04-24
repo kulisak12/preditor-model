@@ -3,46 +3,41 @@ from typing import Iterable, List
 
 from preditor import nlp
 from preditor.model.model import Model
-from preditor.substitution.search import ScoreKey, SearchNode, nlp_key
+from preditor.substitution.config import SubstitutionConfig
+from preditor.substitution.search import ScoreKey, SearchNode
 from preditor.substitution.variants import ReplacementVariantsGenerator
 
 
 def replace(
     model: Model,
     rvg: ReplacementVariantsGenerator,
-    min_variants: int = 2,
-    relax_count: int = 8,
-    score_key: ScoreKey = nlp_key,
+    config: SubstitutionConfig,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
     Scores many texts at once to speed up the search.
-
-    min_variants: Generate at least this many variants for each node,
-        possibly extending the text by more than one word.
-    relax_count: Number of nodes to relax at once.
-    score_key: Function to use for scoring nodes.
     """
     start_node = SearchNode("", 0, 0)
     open_nodes = {start_node}
 
     while True:
-        best = min(open_nodes, key=score_key)
+        best = min(open_nodes, key=config.score_key)
         if best.num_forms == rvg.num_forms:
             return best.text
         unfinished = (
             node for node in open_nodes
             if node.num_forms < rvg.num_forms
         )
-        to_relax = heapq.nsmallest(relax_count, unfinished, key=score_key)
+        to_relax = heapq.nsmallest(config.relax_count, unfinished, key=config.score_key)
         open_nodes.difference_update(to_relax)
-        relaxed = _relax_nodes(model, to_relax, rvg, min_variants)
+        relaxed = _relax_nodes(model, to_relax, rvg, config.min_variants)
         open_nodes.update(relaxed)
 
 
 def replace_baseline(
     model: Model,
-    rvg: ReplacementVariantsGenerator
+    rvg: ReplacementVariantsGenerator,
+    config: SubstitutionConfig,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
@@ -77,7 +72,7 @@ def replace_baseline(
             finished_nodes.append(current)
             continue
 
-        extensions, extension_end = rvg.get_extensions(current.num_forms)
+        extensions, extension_end = rvg.get_extensions(current.num_forms, config.min_variants)
         new_texts = [current.text + extension for extension in extensions]
         new_nlps = nlp.infer_nlp(model, new_texts)
         for new_text, new_nlp in zip(new_texts, new_nlps):
@@ -92,10 +87,7 @@ def replace_baseline(
 def replace_with_cache(
     model: Model,
     rvg: ReplacementVariantsGenerator,
-    min_variants: int = 2,
-    relax_count: int = 8,
-    pool_size: int = 40,
-    score_key: ScoreKey = nlp_key,
+    config: SubstitutionConfig,
 ) -> str:
     """Find best replacement using Dijkstra-inspired approach.
 
@@ -105,7 +97,7 @@ def replace_with_cache(
     open_nodes = {start_node}
 
     while True:
-        best = min(open_nodes, key=score_key)
+        best = min(open_nodes, key=config.score_key)
         if best.num_forms == rvg.num_forms:
             return best.text
         unfinished = (
@@ -113,10 +105,10 @@ def replace_with_cache(
             if node.num_forms < rvg.num_forms
         )
         to_relax = _select_nodes_to_relax_with_cache(
-            best, unfinished, relax_count, pool_size, score_key
+            best, unfinished, config.relax_count, config.pool_size, config.score_key
         )
         open_nodes.difference_update(to_relax)
-        relaxed = _relax_nodes_with_cache(model, to_relax, rvg, min_variants)
+        relaxed = _relax_nodes_with_cache(model, to_relax, rvg, config.min_variants)
         open_nodes.update(relaxed)
 
 
