@@ -4,12 +4,12 @@ from typing import Any, Type
 import flask
 import pydantic
 
-from preditor import suggestion
 from preditor.config import Config
 from preditor.infilling import infilling
 from preditor.model.hf import HFModel
 from preditor.prediction import prediction
 from preditor.substitution import substitution
+from preditor.suggestion import suggestion
 
 app = flask.Flask(__name__)
 model = HFModel(Config.model_path)

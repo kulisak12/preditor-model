@@ -1,8 +1,11 @@
+import functools
 from typing import List
 
-from preditor.infilling import generation
+from transformers import PreTrainedTokenizer
+
 from preditor.infilling.config import InfillingConfig
 from preditor.model.model import Model
+from preditor.suggestion import generation
 
 # this code is very similar to the end strategy
 # it is intentionally not refactored
@@ -14,12 +17,6 @@ INSTRUCTIONS = {
     "cs": "Vyplň mezeru označenou ___"
 }
 PROMPT = "{0}\n{1} ___ {2}\n{1}"
-
-MAX_TOKEN_LENGTH = 80
-bad_words: List[str] = []
-bad_words.extend("#" * i for i in range(1, MAX_TOKEN_LENGTH + 1))
-bad_words.extend("_" * i for i in range(1, MAX_TOKEN_LENGTH + 1))
-bad_words.extend(" " * i for i in range(2, MAX_TOKEN_LENGTH + 1))
 
 
 def generate_infills(
@@ -34,11 +31,12 @@ def generate_infills(
     after_stripped = after_cursor.lstrip()
     had_trailing_space = before_cursor != before_stripped
     input_text = _format_input(before_stripped, after_stripped, lang)
+    blank_tokens = _get_blank_tokens(model.tokenizer)
     decoded = generation.beam_search(
-        model, input_text, had_trailing_space, bad_words,
+        model, input_text, had_trailing_space, blank_tokens,
         config.max_length, config.num_variants
     )
-    return generation.process_decoded(decoded, had_trailing_space)
+    return [generation.trim_decoded(d, had_trailing_space) for d in decoded]
 
 
 def _format_input(before: str, after: str, lang: str) -> str:
@@ -47,3 +45,21 @@ def _format_input(before: str, after: str, lang: str) -> str:
         lang = "en"
     instruction = INSTRUCTIONS[lang]
     return PROMPT.format(instruction, before, after)
+
+
+@functools.lru_cache(maxsize=None)
+def _get_blank_tokens(tokenizer: PreTrainedTokenizer) -> List[int]:
+    """Return a list of tokens that should be suppressed
+    because they resemble the blank marker."""
+    def is_only(token: str, char: str, min_length: int) -> bool:
+        count = token.count(char)
+        return count == len(token) and count >= min_length
+
+    token_ids = tokenizer.get_vocab().values()
+    result: List[int] = []
+    for token_id in token_ids:
+        token = tokenizer.decode([token_id])[0]
+        token = token.lstrip()
+        if is_only(token, "_", 2):
+            result.append(token_id)
+    return result

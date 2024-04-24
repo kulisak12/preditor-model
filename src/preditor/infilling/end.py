@@ -1,8 +1,8 @@
 from typing import List
 
-from preditor.infilling import generation
 from preditor.infilling.config import InfillingConfig
 from preditor.model.model import Model
+from preditor.suggestion import generation
 
 # this code is very similar to the blank strategy
 # it is intentionally not refactored
@@ -31,7 +31,7 @@ def generate_infills(
         model, input_text, had_trailing_space, [],
         config.max_length, config.num_variants
     )
-    return generation.process_decoded(decoded, had_trailing_space)
+    return [generation.trim_decoded(d, had_trailing_space) for d in decoded]
 
 
 def _format_input(before: str, after: str, lang: str) -> str:

@@ -1,6 +1,6 @@
 import pytest
 
-from preditor import suggestion
+from preditor.suggestion import suggestion
 
 
 @pytest.mark.parametrize("input_lines, expected_output", [

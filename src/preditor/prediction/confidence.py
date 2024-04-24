@@ -6,6 +6,7 @@ import torch
 from preditor import nlp
 from preditor.model.model import Model
 from preditor.prediction.config import PredictionConfig
+from preditor.suggestion import generation
 
 
 def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
@@ -15,9 +16,15 @@ def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     where the model is confident enough.
     The higher the confidence parameter, the longer the output.
     """
-    input_ids = model.tokenizer.encode(input_text, return_tensors="pt").to(model.device)
+    text_stripped = input_text.rstrip()
+    had_trailing_space = input_text != text_stripped
+    input_ids = model.tokenizer.encode(text_stripped, return_tensors="pt").to(model.device)
+    processors = generation.get_suppress_processors(
+        model.tokenizer, had_trailing_space, len(input_ids[0]), []
+    )
     output = model.model.generate(
         input_ids,
+        logits_processor=processors,
         generation_config=model.config,
         max_new_tokens=config.max_length,
         output_scores=True,
@@ -30,7 +37,8 @@ def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     best = max(range(len(expected)), key=expected.__getitem__)
     output_ids = gen_ids[:best]
     decoded_text = model.tokenizer.decode(output_ids, skip_special_tokens=True)
-    return decoded_text
+    trimmed = generation.trim_decoded(decoded_text, had_trailing_space)
+    return trimmed
 
 
 def _calculate_expected_usefulness(
