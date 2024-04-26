@@ -47,8 +47,8 @@ def select_by_score(
     Return the prefix that yields the best score.
     """
     variants = list(_expand_prefixes(variants))
-    if after_cursor.lstrip() == after_cursor:
-        variants = [variant + " " for variant in variants]
+    if not variants:
+        return ""
     final = [
         before_cursor + variant + after_cursor
         for variant in variants
@@ -62,12 +62,17 @@ def _expand_prefixes(infill_texts: Iterable[str]) -> Set[str]:
     """Generate all prefixes of the generated texts.
 
     The prefix always ends with a word boundary.
-    The last word is not included since it is not certain that it is complete.
+    Do not include the last word if it is not certain that it is complete.
     """
     result: Set[str] = set()
     for text in infill_texts:
         boundaries = [match.end() for match in re.finditer(r'\b', text)]
-        for boundary in boundaries[:-1]:
-            prefix = text[:boundary].rstrip()
-            result.add(prefix)
+        for boundary in boundaries:
+            if boundary == len(text):
+                continue
+            prefix = text[:boundary]
+            # avoid empty infills
+            if prefix.strip():
+                result.add(prefix)
+                result.add(prefix.rstrip())
     return result
