@@ -25,7 +25,18 @@ def select_by_match(
             if infill.strip():
                 return infill
     # no match
-    return variants[0]
+    return _first_word(variants[0])
+
+
+def _first_word(text: str) -> str:
+    """Return the first word in the text.
+
+    If the text starts with a space, keep that space.
+    """
+    boundaries = [match.end() for match in re.finditer(r'\b', text)]
+    if len(boundaries) < 2:
+        return ""
+    return text[:boundaries[1]]
 
 
 def get_number_of_tokens(model: Model, text: str) -> int:
