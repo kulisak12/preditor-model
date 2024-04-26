@@ -18,6 +18,10 @@ def infill(
     variants = generate_func(
         model, before_cursor, after_cursor, config, lang
     )
+    # filter out empty strings
+    variants = [v for v in variants if v]
+    if not variants:
+        return ""
     selected = select_func(
         variants, model, before_cursor, after_cursor
     )
