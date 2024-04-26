@@ -9,13 +9,14 @@ SelectFunc = Callable[[List[str], Model, str, str], str]
 
 
 def infill(
-    model: Model, before_cursor: str, after_cursor: str, config: InfillingConfig,
+    model: Model, before_cursor: str, after_cursor: str,
+    config: InfillingConfig, lang: str = "cs",
     generate_func: GenerateFunc = end.generate_infills,
     select_func: SelectFunc = selection.select_by_score
 ) -> str:
     """Generate an infill between the two texts."""
     variants = generate_func(
-        model, before_cursor, after_cursor, config, "en"
+        model, before_cursor, after_cursor, config, lang
     )
     selected = select_func(
         variants, model, before_cursor, after_cursor
