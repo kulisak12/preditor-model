@@ -1,9 +1,11 @@
 import functools
 from typing import Iterable, List
 
+import torch
 from transformers import LogitsProcessorList, PreTrainedTokenizer, SuppressTokensAtBeginLogitsProcessor, SuppressTokensLogitsProcessor
 
 from preditor.model.model import Model
+from preditor.suggestion import generation
 
 
 def beam_search(
@@ -15,7 +17,7 @@ def beam_search(
     num_variants: int
 ) -> List[str]:
     """Generate continuations using beam search."""
-    input_ids = model.tokenizer.encode(input_text, return_tensors="pt").to(model.device)
+    input_ids = generation.encode_with_eos(model, input_text).to(model.device)
     input_len = len(input_ids[0])
     processors = get_suppress_processors(
         model.tokenizer, should_start_with_space, input_len, suppress_tokens
@@ -75,3 +77,12 @@ def trim_decoded(decoded: str, had_trailing_space: bool) -> str:
 def _first_line(text: str) -> str:
     """Return the first line of the text."""
     return text[:text.find("\n")]
+
+
+def encode_with_eos(model: Model, text: str) -> torch.Tensor:
+    """Encode text with EOS token."""
+    input_ids = model.tokenizer.encode(text, return_tensors="pt")
+    eos_tensor = torch.tensor(model.tokenizer.eos_token_id).reshape(1, 1)
+    if text == "":
+        return eos_tensor
+    return torch.cat([eos_tensor, input_ids], dim=-1).to(model.device)

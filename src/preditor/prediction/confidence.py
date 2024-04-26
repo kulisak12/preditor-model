@@ -18,7 +18,7 @@ def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     """
     text_stripped = input_text.rstrip()
     had_trailing_space = input_text != text_stripped
-    input_ids = model.tokenizer.encode(text_stripped, return_tensors="pt").to(model.device)
+    input_ids = generation.encode_with_eos(model, text_stripped).to(model.device)
     processors = generation.get_suppress_processors(
         model.tokenizer, had_trailing_space, len(input_ids[0]), []
     )

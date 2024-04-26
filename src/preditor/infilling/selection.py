@@ -3,6 +3,7 @@ from typing import Iterable, List, Set
 
 from preditor import nlp
 from preditor.model.model import Model
+from preditor.suggestion import generation
 
 
 def select_by_match(
@@ -33,7 +34,7 @@ def get_number_of_tokens(model: Model, text: str) -> int:
     It is recommended to increase max_tokens by the number of tokens
     in the text after cursor if using the select_by_match strategy.
     """
-    return len(model.tokenizer.encode(text))
+    return len(generation.encode_with_eos(model, text)[0])
 
 
 def select_by_score(
