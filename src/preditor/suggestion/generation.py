@@ -1,8 +1,7 @@
 import functools
-from typing import Any, Iterable, List
+from typing import Iterable, List
 
-from transformers import (LogitsProcessorList, PreTrainedTokenizer, SuppressTokensAtBeginLogitsProcessor,
-                          SuppressTokensLogitsProcessor)
+from transformers import LogitsProcessorList, PreTrainedTokenizer, SuppressTokensAtBeginLogitsProcessor, SuppressTokensLogitsProcessor
 
 from preditor.model.model import Model
 
@@ -44,9 +43,9 @@ def get_suppress_processors(
     """Get the processors for suppressing tokens in the generation."""
     processors = LogitsProcessorList()
     if should_start_with_space:
-        space_tokens = _get_tokens_with_prefix_space(tokenizer)
-        space_processor = SuppressTokensAtBeginLogitsProcessor(space_tokens, input_len)
-        processors.append(space_processor)
+        nospace_tokens = _get_tokens_without_prefix_space(tokenizer)
+        nospace_processor = SuppressTokensAtBeginLogitsProcessor(nospace_tokens, input_len)
+        processors.append(nospace_processor)
     if suppress_tokens:
         suppress_processor = SuppressTokensLogitsProcessor(suppress_tokens)
         processors.append(suppress_processor)
@@ -54,12 +53,12 @@ def get_suppress_processors(
 
 
 @functools.lru_cache(maxsize=None)
-def _get_tokens_with_prefix_space(tokenizer: PreTrainedTokenizer) -> List[int]:
-    """Get the token ids that are preceded by a space in the tokenizer."""
+def _get_tokens_without_prefix_space(tokenizer: PreTrainedTokenizer) -> List[int]:
+    """Get the token ids that are not preceded by a space in the tokenizer."""
     token_ids = tokenizer.get_vocab().values()
     return [
         token_id for token_id in token_ids
-        if tokenizer.decode([token_id])[0].isspace()
+        if not tokenizer.decode([token_id])[0].isspace()
     ]
 
 

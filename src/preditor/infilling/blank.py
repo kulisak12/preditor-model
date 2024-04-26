@@ -51,15 +51,10 @@ def _format_input(before: str, after: str, lang: str) -> str:
 def _get_blank_tokens(tokenizer: PreTrainedTokenizer) -> List[int]:
     """Return a list of tokens that should be suppressed
     because they resemble the blank marker."""
-    def is_only(token: str, char: str, min_length: int) -> bool:
-        count = token.count(char)
-        return count == len(token) and count >= min_length
-
     token_ids = tokenizer.get_vocab().values()
     result: List[int] = []
     for token_id in token_ids:
-        token = tokenizer.decode([token_id])[0]
-        token = token.lstrip()
-        if is_only(token, "_", 2):
+        token = tokenizer.decode(token_id)
+        if "_" in token or ".." in token:
             result.append(token_id)
     return result
