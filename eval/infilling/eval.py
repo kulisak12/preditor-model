@@ -8,6 +8,8 @@ import time
 from typing import Any, Dict, List, TextIO
 
 from preditor.infilling import blank, end, infilling, selection
+from preditor.model.model import Model
+from preditor.prediction import simple
 from preditor.server import model
 
 
@@ -18,9 +20,20 @@ class Example:
     after_cursor: str
 
 
+def generate_infills_with_prediction(
+    model: Model, before_cursor: str, after_cursor: str,
+    config: infilling.InfillingConfig, lang: str
+) -> List[str]:
+    """Baseline for infilling that uses prediction."""
+    prediction_config = simple.PredictionConfig(max_length=config.max_length)
+    result = simple.generate(model, before_cursor, prediction_config)
+    return [result]
+
+
 GENERATE_FUNCS: Dict[str, infilling.GenerateFunc] = {
     "blank": blank.generate_infills,
     "end": end.generate_infills,
+    "predict": generate_infills_with_prediction,
 }
 SELECT_FUNCS: Dict[str, infilling.SelectFunc] = {
     "match": selection.select_by_match,
