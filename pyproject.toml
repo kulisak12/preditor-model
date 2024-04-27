@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "accelerate",
+    "fasttext",
     "flask",
     "gunicorn",
     "pydantic",
@@ -33,6 +34,7 @@ strict = false
 [[tool.mypy.overrides]]
 module = [
     "dotenv",
+    "fasttext",
     "torch",
     "transformers",
     "ufal",

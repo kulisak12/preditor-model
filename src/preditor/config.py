@@ -4,8 +4,9 @@ import dotenv
 
 
 class Config:
-    tagger_path: str = ""
     model_path: str = ""
+    fasttext_path: str = ""
+    tagger_path: str = ""
 
 
 dotenv.load_dotenv()

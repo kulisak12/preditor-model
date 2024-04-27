@@ -66,7 +66,7 @@ def evaluate(
     for example in examples:
         actual = infilling.infill(
             model, example.before_cursor, example.after_cursor,
-            config, "cs", generate_func, select_func,
+            config, generate_func, select_func,
         )
         if actual == example.expected:
             correct += 1
