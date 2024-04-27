@@ -29,19 +29,27 @@ The model can be configured using environment variables.
 The recommended way is to use a `.env` file in the root directory of the project.
 
 - `PREDITOR_MODEL_PATH`: Path to the model, either local or on HuggingFace.
+- `PREDITOR_FASTTEXT_PATH`: Path to the FastText model.
 - `PREDITOR_TAGGER_PATH`: Path to the MorphoDiTa tagger.
 
 ```bash
-PREDITOR_MODEL_PATH=tiiuae/falcon-7b
-PREDITOR_TAGGER_PATH=/home/user/preditor-model/dict/czech-morfflex2.0-pdtc1.0-220710.tagger
+PREDITOR_MODEL_PATH=BUT-FIT/CSTinyLlama-1.2B
+PREDITOR_FASTTEXT_PATH=/home/user/preditor-model/models/lid.176.ftz
+PREDITOR_TAGGER_PATH=/home/user/preditor-model/models/czech-morfflex2.0-pdtc1.0-220710.tagger
 ```
 
-### Tagger
+### Models
 
-Preditor uses MorphoDiTa for morphological analysis.
-It needs a tagger model to be able to analyze the text.
-The model can be downloaded from the
-[LINDAT repository](https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-4794?locale-attribute=en).
+Preditor needs a FastText model for language identification
+and a MorphoDiTa tagger for morphological analysis.
+
+The FastText model can be downloaded from the
+[FastText website](https://fasttext.cc/docs/en/language-identification.html).
+The MorphoDiTa tagger can be downloaded from the
+[LINDAT repository](https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-4794).
+
+We provide a utility script `download-models.sh` that downloads the models
+to the `models` directory and configures the environment variables in the `.env` file.
 
 ## Requests
 
