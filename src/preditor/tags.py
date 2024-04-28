@@ -127,12 +127,12 @@ def create_tag_wildcard(tag: str) -> str:
     # 13 aspect
     # 14 aggregate
     # 15 var
-    wildcard_positions = [3, 4, 6, 7, 8]
+    wildcard_positions = [3, 4, 6, 7, 8, 14]
     tag_chars = list(" " + tag)  # shift to one-based indexing
     for i in wildcard_positions:
         tag_chars[i] = "?"
-    if tag_chars[14] != "-":
-        tag_chars[14] = "?"
-    tag_chars[15] = "[-1]"
+    # allow the variant form of the old word and the default variant
+    if tag_chars[15] != "-":
+        tag_chars[15] = f"[-{tag_chars[15]}]"
     wildcard = "".join(tag_chars)
     return wildcard[1:]  # shift back
