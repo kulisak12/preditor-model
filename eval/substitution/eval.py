@@ -5,7 +5,7 @@ import csv
 import dataclasses
 import enum
 import time
-from typing import Any, Callable, Dict, Iterable, List, TextIO
+from typing import Dict, Iterable, List, TextIO
 
 from preditor.model.model import Model
 from preditor.substitution import dijkstra, substitution
@@ -79,6 +79,7 @@ def run(
         fieldnames = [f.name for f in dataclasses.fields(Result)]
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, delimiter="|")
         writer.writeheader()
+        warm_up(model, config, substitute_func)
 
         for i, example in enumerate(examples, start=1):
             if show_progress:
@@ -150,6 +151,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--progress", action="store_true")
     parser.add_argument("--results-only", action="store_true")
     return parser
+
+
+def warm_up(
+    model: Model, config: substitution.SubstitutionConfig,
+    substitute_func: substitution.SubstituteFunc
+) -> None:
+    """Run a warm-up to load the data into cache."""
+    substitution.replace(
+        model, "Modrá ", "barva", ".", "světlo",
+        config, substitute_func
+    )
 
 
 if __name__ == "__main__":

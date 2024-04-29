@@ -4,7 +4,7 @@ import argparse
 import csv
 import dataclasses
 import time
-from typing import Any, Dict, List, TextIO
+from typing import Dict, List, TextIO
 
 from preditor.infilling import blank, end, infilling, selection
 from preditor.model.model import Model
@@ -83,6 +83,7 @@ def run(
         fieldnames = [f.name for f in dataclasses.fields(Result)]
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, delimiter="|")
         writer.writeheader()
+        warm_up(model, config, generate_func, select_func)
 
         for i, example in enumerate(examples, start=1):
             if show_progress:
@@ -124,6 +125,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--progress", action="store_true")
     parser.add_argument("--results-only", action="store_true")
     return parser
+
+
+def warm_up(
+    model: Model, config: infilling.InfillingConfig,
+    generate_func: infilling.GenerateFunc, select_func: infilling.SelectFunc,
+) -> None:
+    """Run a warm-up to load the data into cache."""
+    infilling.infill(
+        model, "How ", " you", config,
+        generate_func, select_func,
+    )
 
 
 if __name__ == "__main__":
