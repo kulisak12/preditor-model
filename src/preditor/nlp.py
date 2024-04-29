@@ -40,9 +40,10 @@ def infer_nlp_with_cache(
     input_ids_batch = [_encode_with_eos(model, text)[0] for text in texts]
     trimmed_batch = _trim_and_pad(input_ids_batch)
     logits_batch, caches = _get_outputs_with_cache(model, trimmed_batch, in_caches)
+    logits_shift = trimmed_batch.shape[1] - logits_batch.shape[1]
     starts = [caching.cache_len(cache) for cache in in_caches]
     nlps = [
-        _get_nlp_of_input(input_ids[start:], logits)
+        _get_nlp_of_input(input_ids[start:], logits[start - logits_shift:])
         for input_ids, logits, start in zip(input_ids_batch, logits_batch, starts)
     ]
     out_caches = [
