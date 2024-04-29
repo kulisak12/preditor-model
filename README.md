@@ -23,6 +23,8 @@ gunicorn preditor.server:app -b localhost:3000
 If your device does not have a GPU, or does not run the latest CUDA, you need to
 [install a different version of PyTorch](https://pytorch.org/get-started/locally/).
 
+If the install of `fasttext` fails, use `fasttext-wheel` instead.
+
 ### Configuration
 
 The model can be configured using environment variables.
