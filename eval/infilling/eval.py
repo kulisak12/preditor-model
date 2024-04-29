@@ -6,6 +6,8 @@ import dataclasses
 import time
 from typing import Dict, List, TextIO
 
+from nltk.translate import bleu_score
+
 from preditor.infilling import blank, end, infilling, selection
 from preditor.model.model import Model
 from preditor.prediction import simple
@@ -105,8 +107,18 @@ def eval(results_filename: str) -> None:
 
     avg_time = sum(result.time for result in results) / len(results)
     total_correct = sum(result.infill == result.expected for result in results)
-    print(f"Average time: {avg_time:.3f}s")
+    avg_bleu = sum(bleu(result) for result in results) / len(results)
+    print(f"Average time: {avg_time:.2f}s")
     print(f"Total correct: {total_correct}/{len(results)}")
+    print(f"Average BLEU: {avg_bleu:.3f}")
+
+
+def bleu(result: Result) -> float:
+    return bleu_score.sentence_bleu(
+        [result.expected.split()],
+        result.infill.split(),
+        smoothing_function=bleu_score.SmoothingFunction().method1,
+    )
 
 
 def read_examples(file: TextIO) -> List[Example]:
