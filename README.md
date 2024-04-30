@@ -69,12 +69,12 @@ The configuration is not required.
     "before_cursor": "This is ",
     "after_cursor": "text to complete.",
     "prediction_config": {
-        "max_length": 20,
-        "confidence": 5.0
+        "max_length": 10,
+        "confidence": 7.0
     },
     "infilling_config": {
         "max_length": 8,
-        "num_variants": 5
+        "num_variants": 4
     }
 }
 ```
@@ -102,7 +102,7 @@ Once again, the configuration is not required.
         "min_variants": 2,
         "relax_count": 8,
         "pool_factor": 5,
-        "lp_alpha": 0.5
+        "lp_alpha": 0.7
     }
 }
 ```
