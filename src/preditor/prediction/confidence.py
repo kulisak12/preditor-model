@@ -33,9 +33,10 @@ def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     gen_ids = output.sequences[0][len(input_ids[0]):]
     logits = torch.stack(output.scores).squeeze(1).to(torch.float64)
     nlps = nlp.infer_nlps_from_logits(gen_ids, logits).tolist()
+    # expected[i] is the expected usefulness of the prefix of length i
     expected = _calculate_expected_usefulness(nlps, config.confidence)
     best = max(range(len(expected)), key=expected.__getitem__)
-    output_ids = gen_ids[:best]
+    output_ids = gen_ids[:best+1]
     decoded_text = model.tokenizer.decode(output_ids, skip_special_tokens=True)
     trimmed = generation.trim_decoded(decoded_text, had_trailing_space)
     return trimmed
@@ -55,4 +56,5 @@ def _calculate_expected_usefulness(
         length * math.exp(-nlp / confidence)
         for length, nlp in enumerate(prefix_nlps)
     ]
-    return expected
+    # remove the empty prefix
+    return expected[1:]
