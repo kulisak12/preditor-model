@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Tuple
 
 import torch
 
@@ -18,6 +18,22 @@ def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     """
     text_stripped = input_text.rstrip()
     had_trailing_space = input_text != text_stripped
+    gen_ids, logits = _get_model_outputs(model, text_stripped, had_trailing_space, config)
+    nlps = nlp.infer_nlps_from_logits(gen_ids, logits).tolist()
+    # expected[i] is the expected usefulness of the prefix of length i
+    expected = _calculate_expected_usefulness(nlps, config.confidence)
+    best = max(range(len(expected)), key=expected.__getitem__)
+    output_ids = gen_ids[:best+1]
+    decoded_text = model.tokenizer.decode(output_ids, skip_special_tokens=True)
+    trimmed = generation.trim_decoded(decoded_text, had_trailing_space)
+    return trimmed
+
+
+def _get_model_outputs(
+    model: Model, text_stripped: str, had_trailing_space: bool,
+    config: PredictionConfig
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Generate the continuation ids and logits."""
     input_ids = generation.encode_with_eos(model, text_stripped).to(model.device)
     processors = generation.get_suppress_processors(
         model.tokenizer, had_trailing_space, len(input_ids[0]), []
@@ -32,14 +48,7 @@ def generate(model: Model, input_text: str, config: PredictionConfig) -> str:
     )
     gen_ids = output.sequences[0][len(input_ids[0]):]
     logits = torch.stack(output.scores).squeeze(1).to(torch.float64)
-    nlps = nlp.infer_nlps_from_logits(gen_ids, logits).tolist()
-    # expected[i] is the expected usefulness of the prefix of length i
-    expected = _calculate_expected_usefulness(nlps, config.confidence)
-    best = max(range(len(expected)), key=expected.__getitem__)
-    output_ids = gen_ids[:best+1]
-    decoded_text = model.tokenizer.decode(output_ids, skip_special_tokens=True)
-    trimmed = generation.trim_decoded(decoded_text, had_trailing_space)
-    return trimmed
+    return gen_ids, logits
 
 
 def _calculate_expected_usefulness(
