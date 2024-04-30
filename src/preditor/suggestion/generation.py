@@ -76,7 +76,10 @@ def trim_decoded(decoded: str, had_trailing_space: bool) -> str:
 
 def _first_line(text: str) -> str:
     """Return the first line of the text."""
-    return text[:text.find("\n")]
+    newline = text.find("\n")
+    if newline == -1:
+        return text
+    return text[:newline]
 
 
 def encode_with_eos(model: Model, text: str) -> torch.Tensor:
