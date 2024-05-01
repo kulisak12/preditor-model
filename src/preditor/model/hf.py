@@ -14,7 +14,7 @@ class HFModel(Model):
         self._model = AutoModelForCausalLM.from_pretrained(
             model_path,
             device_map="auto",
-            torch_dtype=torch.bfloat16
+            torch_dtype="auto"
         )
         self._config = GenerationConfig(
             pad_token_id=self._tokenizer.eos_token_id
