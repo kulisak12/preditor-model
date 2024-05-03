@@ -105,8 +105,9 @@ def eval(results_filename: str) -> None:
 
     avg_time = sum(result.time for result in results) / len(results)
     total_correct = sum(result.infill == result.expected for result in results)
+    percentage = total_correct / len(results) * 100
     print(f"Average time: {avg_time:.3f}s")
-    print(f"Total correct: {total_correct}/{len(results)}")
+    print(f"Total correct: {total_correct}/{len(results)} = {percentage:.1f}%")
 
 
 def read_examples(file: TextIO) -> List[Example]:

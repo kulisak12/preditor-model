@@ -105,8 +105,9 @@ def eval(results_filename: str) -> None:
 
     avg_time = sum(result.time for result in results) / len(results)
     total_correct = sum(result.replaced == result.expected for result in results)
+    percentage = total_correct / len(results) * 100
     print(f"Average time: {avg_time:.2f}s")
-    print(f"Total correct: {total_correct}/{len(results)}")
+    print(f"Total correct: {total_correct}/{len(results)} = {percentage:.1f}%")
     print(f"Total good changes: {count_changes(results, ChangeType.GOOD) - len(results)}")
     print(f"Total bad changes: {count_changes(results, ChangeType.BAD)}")
     print(f"Total missed changes: {count_changes(results, ChangeType.MISSED)}")
