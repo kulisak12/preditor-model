@@ -1,9 +1,13 @@
+"""This module generates sentence variants."""
+
 from typing import Set, Tuple
 
 from preditor import tags
 
 
 class ReplacementVariantsGenerator:
+    """Generate variants of a text with a replaced word."""
+
     def __init__(
         self, before_old: str, old: str, after_old: str,
         replacement: str

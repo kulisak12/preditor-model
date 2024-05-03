@@ -1,3 +1,8 @@
+"""This module implements the blank strategy.
+
+It generates infills by instructing the model to fill in the blank marker.
+"""
+
 import functools
 from typing import List
 
@@ -49,8 +54,10 @@ def _format_input(before: str, after: str, lang: str) -> str:
 
 @functools.lru_cache(maxsize=None)
 def _get_blank_tokens(tokenizer: PreTrainedTokenizer) -> List[int]:
-    """Return a list of tokens that should be suppressed
-    because they resemble the blank marker."""
+    """Return a list of tokens that resemble the blank marker.
+
+    Such tokens should be suppressed from the output.
+    """
     token_ids = tokenizer.get_vocab().values()
     result: List[int] = []
     for token_id in token_ids:

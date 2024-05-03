@@ -1,3 +1,5 @@
+"""This module provides generic utils for generation."""
+
 import functools
 from typing import Iterable, List
 
@@ -65,8 +67,10 @@ def _get_tokens_without_prefix_space(tokenizer: PreTrainedTokenizer) -> List[int
 
 
 def trim_decoded(decoded: str, had_trailing_space: bool) -> str:
-    """Trim the decoded text to the first line,
-    and remove the leading space if the input had a trailing space.
+    """Trim the decoded text.
+
+    Keep only the first line.
+    Remove the leading space if the input had a trailing space.
     """
     output = _first_line(decoded)
     if had_trailing_space:

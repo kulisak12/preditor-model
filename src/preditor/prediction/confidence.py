@@ -1,3 +1,8 @@
+"""This module implements the confidence strategy.
+
+It finds the optimal place to cut off the generated text.
+"""
+
 import math
 from typing import List, Tuple
 

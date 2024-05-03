@@ -1,3 +1,8 @@
+"""This module is the entry point for suggestion.
+
+Suggestion combines prediction and infilling tasks.
+"""
+
 from typing import List
 
 from preditor.infilling import infilling

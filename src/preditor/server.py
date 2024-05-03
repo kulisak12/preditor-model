@@ -1,3 +1,8 @@
+"""This module is the entry point for the application.
+
+It provides a REST API for the individual tasks.
+"""
+
 import abc
 from typing import Any, Type
 
@@ -16,12 +21,20 @@ model = HFModel(Config.model_path)
 
 
 class PreditorRequest(pydantic.BaseModel, abc.ABC):
+    """Interface for a request to the Preditor API."""
+
     @abc.abstractmethod
     def handle(self) -> str:
+        """Handle the request and return the output."""
         pass
 
 
 class SuggestionRequest(PreditorRequest):
+    """Request for a suggestion.
+
+    It combines the prediction and infilling tasks.
+    """
+
     before_cursor: str
     after_cursor: str
     prediction_config: prediction.PredictionConfig = prediction.PredictionConfig()
@@ -35,6 +48,8 @@ class SuggestionRequest(PreditorRequest):
 
 
 class SubstitutionRequest(PreditorRequest):
+    """Request for a substitution of a word in a sentence."""
+
     before_old: str
     old: str
     after_old: str
@@ -51,17 +66,20 @@ class SubstitutionRequest(PreditorRequest):
 
 @app.route("/")
 def get_status() -> str:
+    """Show that the server is running."""
     return "<h1>Preditor</h1>"
 
 
 @app.route("/suggest/", methods=["POST"])
-def predict() -> flask.Response:
+def suggest() -> flask.Response:
+    """Dispatch a suggestion request."""
     request: Any = flask.request.get_json()
     return _handle_request(request, SuggestionRequest)
 
 
 @app.route("/substitute/", methods=["POST"])
 def substitute() -> flask.Response:
+    """Dispatch a substitution request."""
     data: Any = flask.request.get_json()
     return _handle_request(data, SubstitutionRequest)
 

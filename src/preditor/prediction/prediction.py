@@ -1,3 +1,5 @@
+"""This module is the entry point for the prediction task."""
+
 from typing import Callable
 
 from preditor.model.model import Model

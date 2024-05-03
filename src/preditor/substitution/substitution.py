@@ -1,3 +1,5 @@
+"""This module is the entry point for the substitution task."""
+
 import itertools
 from typing import Callable, Tuple
 
@@ -16,9 +18,7 @@ def replace(
     config: SubstitutionConfig,
     func: SubstituteFunc = dijkstra.replace_with_cache,
 ) -> str:
-    """Replace part of the sentence containing the old part with the replacement
-    and modify the rest of the sentence to match.
-    """
+    """Replace part of the sentence and modify the rest to match."""
     previous_sentences, _, next_sentences = _find_sentence_with_old(
         before_old, old, after_old
     )

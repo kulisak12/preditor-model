@@ -3,11 +3,11 @@
 A model used by [Preditor](https://github.com/kulisak12/preditor).
 
 Serves as the backend for typing assistance.
-Provides completions while typing, even in the middle of a sentence.
+It provides completions while typing, even in the middle of a sentence.
 For Czech, it allows the user to substitute a word in a sentence
 and automatically adjusts the forms of the surrounding words.
 
-Uses an existing large language model without any additional fine-tuning.
+It uses an existing large language model without any additional fine-tuning.
 A single language model handles all of the tasks mentioned above.
 
 ## Quick start

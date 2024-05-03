@@ -1,3 +1,5 @@
+"""This module provides functions for estimating the language of a text."""
+
 from typing import Any, Iterable, Tuple
 
 import fasttext

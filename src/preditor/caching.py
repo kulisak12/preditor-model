@@ -1,3 +1,5 @@
+"""This module handles the model's attention cache."""
+
 import dataclasses
 from typing import Iterable, List, Optional, Tuple
 
@@ -13,6 +15,7 @@ Cache = Tuple[CacheLayer, ...]
 @dataclasses.dataclass(frozen=True)
 class LazyCache:
     """A cache that has not yet been trimmed."""
+
     cache: Cache
     length: int
 

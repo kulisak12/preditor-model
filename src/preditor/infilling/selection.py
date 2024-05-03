@@ -1,3 +1,8 @@
+"""This module implements the selection strategies.
+
+These strategies select the best infill from a list of variants.
+"""
+
 import re
 from typing import Iterable, List, Set
 

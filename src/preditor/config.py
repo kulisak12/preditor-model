@@ -1,9 +1,13 @@
+"""This module loads configuration from environment variables."""
+
 import os
 
 import dotenv
 
 
 class Config:
+    """Configuration for the application."""
+
     model_path: str = ""
     fasttext_path: str = ""
     tagger_path: str = ""

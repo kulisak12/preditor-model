@@ -1,3 +1,5 @@
+"""This module provides configuration for the substitution algorithms."""
+
 import pydantic
 
 from preditor.substitution.search import ScoreKey, lp_key
@@ -12,6 +14,7 @@ class SubstitutionConfig(pydantic.BaseModel):
         for node selection.
     lp_alpha: The exponent in the length penalty function.
     """
+
     min_variants: int = pydantic.Field(2, ge=2)
     relax_count: int = pydantic.Field(8, ge=1)
     pool_factor: int = pydantic.Field(5, ge=1)

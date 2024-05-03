@@ -1,3 +1,5 @@
+"""This module provides functions that calculate the sentence score."""
+
 from typing import List, Optional, Tuple
 
 import torch

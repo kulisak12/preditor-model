@@ -1,3 +1,5 @@
+"""This module provides a model that loads a Hugging Face model and tokenizer."""
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, PreTrainedModel, PreTrainedTokenizer
 
@@ -5,6 +7,8 @@ from preditor.model.model import Model
 
 
 class HFModel(Model):
+    """A model that loads a Hugging Face model and tokenizer."""
+
     def __init__(self, model_path: str):
         self._tokenizer = AutoTokenizer.from_pretrained(model_path)
         self._prefix_space_tokenizer = AutoTokenizer.from_pretrained(

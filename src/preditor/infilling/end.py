@@ -1,3 +1,9 @@
+"""This module implements the end strategy.
+
+It generates infills by instructing the model to continue the text
+such that it ends with a given string.
+"""
+
 from typing import List
 
 from preditor.infilling.config import InfillingConfig

@@ -1,3 +1,8 @@
+"""This module implements the Dijsktra-inspired strategies.
+
+It searches the implicit graph of all sentence variants.
+"""
+
 import heapq
 from typing import Iterable, List
 

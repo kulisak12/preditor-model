@@ -1,3 +1,8 @@
+"""This module words with the tagger.
+
+It can analyze sentences and generate word forms.
+"""
+
 import dataclasses
 from typing import Iterator, List, Optional, Set, Tuple
 
@@ -12,6 +17,8 @@ if not tagger:
 
 @dataclasses.dataclass(frozen=True)
 class TaggedForm:
+    """A word form with its lemma and tag."""
+
     lemma: Optional[str]
     tag: Optional[str]
     form: str

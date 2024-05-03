@@ -1,3 +1,5 @@
+"""This module is the entry point for the infilling task."""
+
 from typing import Callable, List
 
 from preditor import language

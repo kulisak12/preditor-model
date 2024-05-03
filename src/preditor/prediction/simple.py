@@ -1,3 +1,8 @@
+"""This module implements the simple strategy.
+
+It generates a continuation and returns its first sentence.
+"""
+
 import re
 
 from preditor.model.model import Model

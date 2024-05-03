@@ -1,3 +1,5 @@
+"""This module implements nodes in the implicit graph of sentence variants."""
+
 import dataclasses
 from typing import Callable, Optional
 
@@ -6,6 +8,8 @@ from preditor import caching
 
 @dataclasses.dataclass(frozen=True)
 class SearchNode:
+    """A node in the implicit graph of sentence variants."""
+
     text: str
     nlp: float
     num_forms: int
