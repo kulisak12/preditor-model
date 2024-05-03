@@ -25,6 +25,14 @@ If your device does not have a GPU, or does not run the latest CUDA, you need to
 
 If the install of `fasttext` fails, use `fasttext-wheel` instead.
 
+The server may give you the following warnings; they can be safely ignored.
+
+```
+Warning : `load_model` does not return WordVectorModel or SupervisedModel any more, but a `FastText` object which is very similar.
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+```
+
 ### Configuration
 
 The model can be configured using environment variables.
