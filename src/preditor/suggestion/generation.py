@@ -83,6 +83,8 @@ def _first_line(text: str) -> str:
     newline = text.find("\n")
     if newline == -1:
         return text
+    if newline == 0:
+        return " " + _first_line(text.lstrip())
     return text[:newline]
 
 
